@@ -9,30 +9,6 @@ source = 'nativefs.lua'
 before = 'main.lua'
 name = 'nativefs'
 
-[[patches]]
-[patches.pattern]
-target = "game.lua"
-pattern = "self:load_profile(G.SETTINGS.profile or 1)"
-position = "after"
-payload = "initChallenges()"
-match_indent = true
-overwrite = false
-
-[[patches]]
-[patches.copy]
-target = "main.lua"
-position = "append"
-sources = ["mod.lua"]
-
-[[patches]]
-[patches.pattern]
-target = "functions/misc_functions.lua"
-pattern = "function init_localization()"
-position = "after"
-payload = 'ChallengeMod.addLocalization()'
-match_indent = true
-overwrite = false
-
 
 [[patches]]
 [patches.pattern]
@@ -42,10 +18,10 @@ position = "after"
 payload = """
 if v.perishable then _joker:set_perishable(true) end
 if v.rental then _joker:set_rental(true) end
-if v.debuff then 
-	_joker.debuff = true
-	_joker.ability.perishable = true
-	_joker.ability.perish_tally = 0
+if v.debuff then
+  _joker.debuff = true
+  _joker.ability.perishable = true
+  _joker.ability.perish_tally = 0
 end
 """
 match_indent = true
@@ -69,32 +45,6 @@ overwrite = false
 
 [[patches]]
 [patches.pattern]
-target = "game.lua"
-pattern = 'elseif v.value then'
-position = "before"
-payload = """
-elseif v.id == 'cm_noshop' then
-  self.GAME.modifiers.cm_noshop = true
-elseif v.id == 'cm_scaling' then
-  self.GAME.modifiers.cm_scaling = v.value
-elseif v.id == 'cm_stake' then
-  ChallengeMod.custom_stake(v.value)
-elseif v.id == 'all_perishable' then
-  self.GAME.modifiers.all_perishable = true
-elseif v.id == 'all_rental' then
-  self.GAME.modifiers.all_rental = true
-elseif v.id == 'no_shop_planets' then
-  self.GAME.planet_rate = 0
-elseif v.id == 'no_shop_tarots' then
-  self.GAME.tarot_rate = 0
-elseif v.id == 'cm_all_facedown' then
-  self.GAME.modifiers.cm_all_facedown = true
-"""
-match_indent = true
-overwrite = false
-
-[[patches]]
-[patches.pattern]
 target = "functions/UI_definitions.lua"
 pattern = "if v.pinned then"
 position = "before"
@@ -104,15 +54,6 @@ if v.perishable then card:set_perishable(true) end
 '''
 match_indent = true
 overwrite = false
-
-[[patches]]
-[patches.pattern]
-target = "functions/UI_definitions.lua"
-pattern = """game_rules[#game_rules+1] = {n=G.UIT.R, config={align = "cl"}, nodes= localize{type = 'text', key = 'ch_c_'..v.id, vars = {v.value}}}"""
-position = "at"
-payload = """game_rules[#game_rules+1] = {n=G.UIT.R, config={align = "cl"}, nodes= localize{type = 'text', key = 'ch_c_'..v.id, vars = {v.value, v.name}}}"""
-match_indent = true
-overwrite = true
 
 [[patches]]
 [patches.pattern]

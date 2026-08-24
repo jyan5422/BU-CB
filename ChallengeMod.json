@@ -1,0 +1,13 @@
+{
+    "id": "ChallengeMod",
+    "name": "Balatro Custom Challenges",
+    "author": ["BU-CB"],
+    "description": "Custom challenge runs with unique rules, restrictions, and mechanics",
+    "prefix": "chmod",
+    "main_file": "ChallengeMod.lua",
+    "badge_colour": "c7638f",
+    "dependencies": [
+        "Steamodded (>=1.0.0~BETA-1814a)"
+    ],
+    "version": "1.0.0"
+}
