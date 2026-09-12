@@ -29,6 +29,55 @@ overwrite = false
 
 [[patches]]
 [patches.pattern]
+target = "functions/UI_definitions.lua"
+pattern = "create_sprite(0,0,1,1, G.ANIMATION_ATLAS"
+position = "at"
+payload = "create_sprite(0,0,0.45,0.45, G.ANIMATION_ATLAS"
+match_indent = true
+overwrite = false
+
+[[patches]]
+[patches.pattern]
+target = "functions/UI_definitions.lua"
+pattern = """table.insert(banned_other,
+{n=G.UIT.R, config={align = "cm", padding = 0}, nodes={
+{n=G.UIT.O, config={object = temp_blind}}
+}}
+)"""
+position = "at"
+payload = """
+local _other_row = math.floor((k-1)/4)+1
+banned_other[_other_row] = banned_other[_other_row] or {n=G.UIT.R, config={align = "cm", padding = 0}, nodes={}}
+table.insert(banned_other[_other_row].nodes, {n=G.UIT.O, config={object = temp_blind, w = 0.45, h = 0.45}})
+"""
+match_indent = true
+overwrite = false
+
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "elseif not v.boss.showdown and (v.boss.min <= math.max(1, G.GAME.round_resets.ante)"
+position = "at"
+payload = "elseif not v.boss.showdown and (v.boss.min <= math.max(1, G.GAME.round_resets.ante) and ((math.max(1, G.GAME.round_resets.ante))%G.GAME.win_ante ~= 0 or G.GAME.round_resets.ante < 2 or G.GAME.modifiers.cm_boss_suit_final)) then"
+match_indent = true
+overwrite = false
+
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "if G.GAME.modifiers.set_eternal_ante and (G.GAME.round_resets.ante == G.GAME.modifiers.set_eternal_ante) then"
+position = "before"
+payload = """
+if G.GAME.modifiers.cm_shrink_hand then
+G.GAME.starting_params.hand_size = math.max(G.GAME.starting_params.hand_size - (G.GAME.modifiers.cm_shrink_hand or 1), 1)
+if G.hand then G.hand:change_size(-(G.GAME.modifiers.cm_shrink_hand or 1)) end
+end
+"""
+match_indent = true
+overwrite = false
+
+[[patches]]
+[patches.pattern]
 target = "functions/common_events.lua"
 pattern = "if (area == G.shop_jokers) or (area == G.pack_cards) then"
 position = "before"
@@ -88,6 +137,7 @@ payload = """if G.GAME.modifiers.cm_all_facedown == true then
 self.facing = 'back' end"""
 match_indent = true
 overwrite = false
+times = 1
 
 [[patches]]
 [patches.pattern]
@@ -98,14 +148,60 @@ payload = """if G.GAME.modifiers.cm_all_facedown == true then
 self.sprite_facing = 'back' end"""
 match_indent = true
 overwrite = false
+times = 1
+
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = """self.sprite_facing = 'front'
+self.pinch.x =false"""
+position = "at"
+payload = """self.sprite_facing = 'front'
+if G.GAME.modifiers.cm_all_facedown == true and (not self.area or self.area ~= G.hand) then
+self.sprite_facing = 'back' end
+self.pinch.x =false"""
+match_indent = true
+overwrite = false
 
 [[patches]]
 [patches.pattern]
 target = "cardarea.lua"
-pattern = "local stay_flipped = G.GAME and G.GAME.blind and G.GAME.blind:stay_flipped(self, card)"
+pattern = "local stay_flipped = G.GAME and G.GAME.blind and G.GAME.blind:stay_flipped(self, card, area)"
 position = "before"
 payload = """
 if G.GAME.modifiers.cm_all_facedown == true then
+card.facing = 'front'
+card.sprite_facing = 'front'
+end
+"""
+match_indent = true
+overwrite = false
+
+[[patches]]
+[patches.pattern]
+target = "cardarea.lua"
+pattern = "function CardArea:align_cards()"
+position = "after"
+payload = """
+if G.GAME.modifiers and G.GAME.modifiers.cm_all_facedown == true and self == G.hand then
+for _, _c in ipairs(self.cards) do
+if _c.facing ~= 'front' and not _c.flipping then
+_c.facing = 'front'
+_c.sprite_facing = 'front'
+end
+end
+end
+"""
+match_indent = true
+overwrite = false
+
+[[patches]]
+[patches.pattern]
+target = "cardarea.lua"
+pattern = "if self == G.hand and stay_flipped then"
+position = "after"
+payload = """
+if G.GAME.modifiers.cm_all_facedown == true and self == G.hand then
 card.facing = 'front'
 card.sprite_facing = 'front'
 end
