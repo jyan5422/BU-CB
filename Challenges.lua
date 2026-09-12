@@ -44,6 +44,8 @@ local custom_modifier_keys = {
   "cm_hand_kills",
   "cm_deck",
   "cm_credit",
+  "cm_shrink_hand",
+  "cm_boss_suit_final",
 }
 
 -- Localization for challenge rules
@@ -69,6 +71,9 @@ function ChallengeMod.addLocalization()
   G.localization.misc.v_text.ch_c_cm_mult_dollar_cap = { "{C:blue}Mult{} cannot exceed the current {C:money}$" }
   G.localization.misc.v_text.ch_c_cm_deck = { "Played on #1#{}" }
   G.localization.misc.v_text.ch_c_cm_credit = { "Concept by: {C:green}#1#{}" }
+  G.localization.misc.v_text.ch_m_reroll_cost = { "Rerolls cost {C:money}$#1#" }
+  G.localization.misc.v_text.ch_c_cm_shrink_hand = { "{C:attention}Hand size{} decreases by {C:red}#1#{} after each ante" }
+G.localization.misc.v_text.ch_c_cm_boss_suit_final = { "Suit final boss" }
 end
 
 -- Blind amount scaling
@@ -137,6 +142,14 @@ function ChallengeMod.fold()
   G.SETTINGS.paused = false
 end
 
+-- Apply challenge rule side-effects after the run's rates are initialized
+local start_run_ref = Game.start_run
+function Game:start_run(args)
+  start_run_ref(self, args)
+  if G.GAME.modifiers.no_shop_tarots then G.GAME.tarot_rate = 0 end
+  if G.GAME.modifiers.no_shop_planets then G.GAME.planet_rate = 0 end
+end
+
 -- Hook: Blind debuff hand
 local blind_debuff_hand_ref = Blind.debuff_hand
 function Blind:debuff_hand(cards, hand, handname, check)
@@ -183,6 +196,19 @@ function mod_mult(_mult)
   end
   return _mult
 end
+
+-- Register custom modifiers with SMODS (for rule text in challenge list)
+if SMODS.Modifier then
+  for _, key in ipairs(custom_modifier_keys) do
+    SMODS.Modifier({
+      key = key,
+      config = {},
+    })
+  end
+end
+
+-- Initialize localization
+ChallengeMod.addLocalization()
 
 -- Register challenges via SMODS
 for _, v in pairs(CustomChallenges) do
