@@ -56,9 +56,9 @@ overwrite = false
 [[patches]]
 [patches.pattern]
 target = "functions/common_events.lua"
-pattern = "elseif not v.boss.showdown and (v.boss.min <= math.max(1, G.GAME.round_resets.ante)"
-position = "at"
-payload = "elseif not v.boss.showdown and (v.boss.min <= math.max(1, G.GAME.round_resets.ante) and ((math.max(1, G.GAME.round_resets.ante))%G.GAME.win_ante ~= 0 or G.GAME.round_resets.ante < 2 or G.GAME.modifiers.cm_boss_suit_final)) then"
+pattern = "or G.GAME.round_resets.ante < 2"
+position = "after"
+payload = " or G.GAME.modifiers.cm_boss_suit_final"
 match_indent = true
 overwrite = false
 
