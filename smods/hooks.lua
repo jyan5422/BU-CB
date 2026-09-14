@@ -26,3 +26,16 @@ end
 -- ChallengeMod.update(dt) is defined in core.lua but never called upstream
 -- either, so it stays unwired here: enabling it would start the daily score
 -- writes that the Lovely build has never actually run.
+
+-- cm_mult_dollar_cap, for the restored Series Funding. BU-CB implemented this
+-- by wrapping mod_mult; BU-CB-DEV dropped both the challenge and the modifier,
+-- so the hook comes back with it. (BU-CB's companion chips_dollar_cap was only
+-- ever rule text -- never implemented anywhere -- so it is not revived.)
+local mod_mult_ref = mod_mult
+function mod_mult(_mult)
+  _mult = mod_mult_ref(_mult)
+  if G.GAME.modifiers.cm_mult_dollar_cap then
+    _mult = math.min(_mult, math.max(G.GAME.dollars, 0))
+  end
+  return _mult
+end

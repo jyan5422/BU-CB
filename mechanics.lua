@@ -10,6 +10,7 @@ function ChallengeMod.localizeMechDescriptions()
   -- Key must match the rules.custom id exactly; challenges use cm_decreasing_handsize.
   G.localization.misc.v_text.ch_c_cm_decreasing_handsize = { "Hand size {C:attention}Decreases{} each Ante" }
   G.localization.misc.v_text.ch_c_cm_random_deck = { "Your deck is {C:attention}randomized{}" }
+  G.localization.misc.v_text.ch_c_cm_mult_dollar_cap = { "{C:blue}Mult{} cannot exceed the current {C:money}$" }
   G.localization.misc.v_text.ch_c_all_rental = { "All Jokers are {C:attention}Rental{}" }
   G.localization.misc.v_text.ch_c_cm_force_hand = { "Played hands must contain a {C:blue}#1#{}" }
   G.localization.misc.v_text.ch_c_cm_negative_interest = { "Money is lost from {C:attention}Interest{}" }
@@ -50,6 +51,8 @@ function ChallengeMod.evaluate_rules(self, v)
     self.GAME.modifiers.cm_noshop = true
   elseif v.id == 'cm_auto_pack' then
     self.GAME.modifiers.cm_auto_pack = true
+  elseif v.id == 'cm_mult_dollar_cap' then
+    self.GAME.modifiers.cm_mult_dollar_cap = true
   elseif v.id == 'cm_decreasing_handsize' then
     self.GAME.modifiers.cm_decreasing_handsize = v.value
   elseif v.id == 'cm_scaling' then
