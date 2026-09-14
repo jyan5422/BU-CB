@@ -15,7 +15,10 @@ position = "before"
 payload = """
 if ChallengeMod and ChallengeMod.DEBUG then
   ChallengeMod.DEBUG.set_blind_calls = ChallengeMod.DEBUG.set_blind_calls + 1
-  ChallengeMod.DEBUG.last_blind_type = tostring(self:get_type())
+  -- get_type() has no else branch: it returns NOTHING when self.name is
+  -- empty, so tostring() would be called with no argument and error.
+  local _t = self:get_type()
+  ChallengeMod.DEBUG.last_blind_type = _t == nil and "nil" or tostring(_t)
 end
 if G.GAME and G.GAME.modifiers and G.GAME.modifiers.cm_decreasing_handsize and self:get_type() == 'Boss' and G.hand then
   G.hand:change_size(-G.GAME.modifiers.cm_decreasing_handsize)
