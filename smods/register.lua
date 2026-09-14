@@ -19,9 +19,14 @@ for _, data in ipairs(G.CHALLENGES or {}) do
   if id and (id:sub(1, 2) == "cm" or id:find("Daily_Challenge")) and not SMODS.Challenges[id] then
     -- Keyed by the id the game stores in G.GAME.challenge; `key` and `id` must
     -- agree, since SMODS reads both.
+    --
+    -- Nothing else is added to the table. Starting a run puts it in G.GAME as
+    -- challenge_tab, and save_run serializes that through
+    -- recursive_table_cull, which walks every nested table. A `mod` field
+    -- pointing at SMODS.current_mod dragged in its dependency tree (a version
+    -- table plus a comparison function) and the walk died with "loop in
+    -- gettable", so only plain scalars belong here.
     data.key = data.key or id
-    data.set = data.set or "Challenge"
-    data.mod = data.mod or SMODS.current_mod
     -- SMODS.eval_individual calls object:calculate(context), and
     -- calculate/calc_dollar_bonus are no-op defaults on the SMODS.Challenge
     -- class that registered objects inherit. These tables come from the

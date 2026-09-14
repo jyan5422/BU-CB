@@ -84,7 +84,15 @@ function M.load()
   }
 
   SMODS = {
-    current_mod = { path = "./" },
+    -- Shaped like the real mod object, dependency tree and all: putting this
+    -- on a challenge table is what broke save_run, so the serialization spec
+    -- needs something with the same reach to be a real test.
+    current_mod = {
+      path = "./",
+      dependencies = {
+        { id = "Steamodded", fulfilled = true, { ver = { major = 1, minor = 0 }, op = function() end } },
+      },
+    },
     Challenges = {},
     -- Mirrors the real class: calculate and calc_dollar_bonus are no-op
     -- defaults that registered objects inherit.

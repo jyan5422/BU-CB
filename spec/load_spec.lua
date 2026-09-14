@@ -151,3 +151,34 @@ describe("restored challenges", function()
     end
   end)
 end)
+
+describe("saving a run", function()
+  local mod
+
+  setup(function()
+    mod = harness.load()
+  end)
+
+  -- Starting a challenge sets G.GAME.challenge_tab to the challenge table, and
+  -- save_run serializes it through recursive_table_cull, which walks every
+  -- nested table with pairs(). Anything reachable that loops -- a mod object's
+  -- dependency tree, for instance -- kills the save with "loop in gettable".
+  -- Metatables are fine: pairs() does not follow __index.
+  it("keeps challenge tables free of unserializable values", function()
+    local function walk(t, path, seen, depth)
+      assert.is_true(depth < 20, "table nests too deeply at " .. path)
+      assert.is_nil(seen[t], "cycle reachable from the challenge table at " .. path)
+      seen[t] = true
+      for k, v in pairs(t) do
+        local where = path .. "." .. tostring(k)
+        assert.not_equal("function", type(v), "function value at " .. where)
+        if type(v) == "table" then walk(v, where, seen, depth + 1) end
+      end
+      seen[t] = nil
+    end
+
+    for _, c in ipairs(mod.ours) do
+      walk(c, c.id, {}, 0)
+    end
+  end)
+end)
