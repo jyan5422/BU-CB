@@ -2,22 +2,10 @@
 -- The per-mechanic patches under lovely/ still apply as Lovely patches; only
 -- the init-level ones are reimplemented here as function wraps.
 
--- challenge_init.toml patches game.lua's rule loop, before `if v.id == 'no_reward'`.
--- Game:start_run walks rules.custom, so the dispatch happens here instead.
-local start_run_ref = Game.start_run
-function Game:start_run(args)
-  start_run_ref(self, args)
-  -- G.GAME.challenge is the id string; challenge_tab holds the table. Reading
-  -- .rules off the id silently yielded nil, so no custom rule was ever
-  -- evaluated and every evaluate_rules modifier did nothing.
-  local tab = self.GAME and self.GAME.challenge_tab
-  local custom = tab and tab.rules and tab.rules.custom
-  if not custom then return end
-  for _, v in ipairs(custom) do
-    ChallengeMod.evaluate_rules(self, v)
-    ChallengeMod.evaluate_daily_modifiers(self, v)
-  end
-end
+-- Rule dispatch is NOT here: it lives in lovely/cm_evaluate_rules.toml, which
+-- injects into game.lua's rule loop. Wrapping Game:start_run cannot work --
+-- the loop writes G.GAME.starting_params and start_run consumes those values
+-- further down the same function, so a wrapper runs far too late.
 
 -- challenge_init.toml patched game.lua before love.graphics.setCanvas(G.AA_CANVAS)
 -- to call ChallengeMod.draw(), which prints the mod version in the top-left

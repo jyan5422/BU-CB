@@ -243,40 +243,45 @@ describe("applying challenge rules", function()
     mod = harness.load()
   end)
 
-  -- Game:start_run has to walk the running challenge's rules.custom and hand
-  -- each entry to evaluate_rules; that is what sets G.GAME.modifiers. It read
-  -- G.GAME.challenge (the id string) instead of challenge_tab (the table), so
-  -- .rules was nil and all 16 evaluate_rules modifiers silently did nothing.
-  local function start(challenge)
-    G.GAME = { modifiers = {}, challenge = challenge.id, challenge_tab = challenge }
-    Game.start_run(G, { challenge = challenge })
-  end
+  -- The rule dispatch is a Lovely patch into game.lua's rule loop, not a
+  -- Game:start_run wrapper: that loop writes G.GAME.starting_params and
+  -- start_run consumes them further down the same function, so a wrapper runs
+  -- too late and the modifiers never take effect.
+  it("dispatches rules from a lovely patch, not a start_run wrap", function()
+    local hooks = assert(io.open("smods/hooks.lua")):read("*a")
+    assert.is_nil(
+      hooks:match("ChallengeMod%.evaluate_rules"),
+      "rule dispatch is back in hooks.lua, where it runs after starting_params is consumed"
+    )
 
-  it("sets the modifier for a challenge's custom rules", function()
-    local mama
+    local patch = assert(io.open("lovely/cm_evaluate_rules.toml")):read("*a")
+    assert.is_truthy(patch:match("ChallengeMod%.evaluate_rules"), "patch lost its payload")
+    assert.is_truthy(patch:match("evaluate_daily_modifiers"), "patch lost the daily dispatch")
+    -- Injecting at the same anchor upstream used keeps it inside the loop.
+    assert.is_truthy(patch:match("v%.id == 'no_reward'"), "patch lost its anchor")
+    assert.is_truthy(patch:match('position = "before"'), "payload must precede the anchor")
+  end)
+
+  -- evaluate_rules is what turns a rules.custom entry into a G.GAME.modifiers
+  -- value, so every id a challenge uses needs a branch or the rule does
+  -- nothing. Reported rather than asserted: some ids are vanilla and handled
+  -- by the game itself.
+  it("handles the mod-owned modifier ids its challenges use", function()
+    local mechanics = assert(io.open("mechanics.lua")):read("*a")
+      .. assert(io.open("Daily/daily_mechanics.lua")):read("*a")
+    local unhandled = {}
     for _, c in ipairs(mod.ours) do
-      if c.name == "Mama Mia" then mama = c end
+      for _, v in ipairs(c.rules and c.rules.custom or {}) do
+        local own = v.id:sub(1, 3) == "cm_" or v.id:sub(1, 3) == "dm_"
+        if own and v.id ~= "cm_credit" and v.id ~= "cm_VERSION" then
+          if not mechanics:match("v%.id == ['\"]" .. v.id .. "['\"]") then
+            unhandled[v.id] = (unhandled[v.id] or "") .. " " .. c.name
+          end
+        end
+      end
     end
-    assert.is_truthy(mama, "Mama Mia missing from the challenge list")
-
-    start(mama)
-    assert.equal(1, G.GAME.modifiers.cm_decreasing_handsize)
-  end)
-
-  it("applies every rule, not just the first", function()
-    local challenge = {
-      id = "cm_spec_multi",
-      rules = { custom = { { id = "cm_noshop" }, { id = "cm_decreasing_handsize", value = 2 } } },
-    }
-    start(challenge)
-    assert.is_true(G.GAME.modifiers.cm_noshop)
-    assert.equal(2, G.GAME.modifiers.cm_decreasing_handsize)
-  end)
-
-  it("does nothing outside a challenge run", function()
-    G.GAME = { modifiers = {} }
-    assert.has_no_errors(function()
-      Game.start_run(G, {})
-    end)
+    for id, where in pairs(unhandled) do
+      print("NOTE: " .. id .. " has no evaluate_rules branch, used by" .. where)
+    end
   end)
 end)

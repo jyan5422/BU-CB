@@ -1,0 +1,24 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+# Carried over from challenge_init.toml, which the SMODS build drops.
+#
+# This has to be a Lovely patch rather than a Game:start_run wrap. The rule
+# loop runs partway through start_run and writes G.GAME.starting_params, which
+# the same function then consumes to size the hand, joker and consumable areas
+# and to set dollars. A wrapper only runs once start_run has finished, so the
+# modifiers landed too late to affect anything -- Mama Mia's hand never shrank
+# and no_shop_* had no effect, even though the values were being set.
+[[patches]]
+[patches.pattern]
+target = "game.lua"
+pattern = "if v.id == 'no_reward' then"
+position = "before"
+payload = """
+ChallengeMod.evaluate_rules(self, v)
+ChallengeMod.evaluate_daily_modifiers(self, v)
+"""
+match_indent = true
+overwrite = false
