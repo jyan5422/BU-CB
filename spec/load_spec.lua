@@ -182,3 +182,56 @@ describe("saving a run", function()
     end
   end)
 end)
+
+describe("joker timing modifiers", function()
+  local mod
+
+  setup(function()
+    mod = harness.load()
+  end)
+
+  -- BU-CB disabled these by patching the per-joker eval in state_events.lua.
+  -- 1.0.1o replaced those loops with SMODS.calculate_context, so the patterns
+  -- stopped matching and the rules silently did nothing. The wrapper now skips
+  -- the 'jokers' dispatch for the relevant contexts.
+  local cases = {
+    { modifier = "cm_no_after_hand", flag = "after" },
+    { modifier = "cm_no_after_round", flag = "end_of_round" },
+    { modifier = "cm_no_on_discard", flag = "discard" },
+  }
+
+  it("skips joker evaluation when the modifier is on", function()
+    for _, case in ipairs(cases) do
+      G.GAME = { modifiers = { [case.modifier] = true } }
+      harness.last_areas = {}
+      SMODS.calculate_card_areas("jokers", { [case.flag] = true })
+      assert.equal(0, #harness.last_areas,
+        case.modifier .. " did not skip the jokers dispatch")
+    end
+  end)
+
+  it("still evaluates jokers when the modifier is off", function()
+    for _, case in ipairs(cases) do
+      G.GAME = { modifiers = {} }
+      harness.last_areas = {}
+      SMODS.calculate_card_areas("jokers", { [case.flag] = true })
+      assert.equal(1, #harness.last_areas,
+        case.modifier .. " suppressed jokers when it should not")
+    end
+  end)
+
+  it("leaves other card areas alone", function()
+    G.GAME = { modifiers = { cm_no_after_hand = true } }
+    harness.last_areas = {}
+    SMODS.calculate_card_areas("playing_cards", { after = true })
+    SMODS.calculate_card_areas("individual", { after = true })
+    -- The rules say Joker abilities; seals and consumables must still fire.
+    assert.equal(2, #harness.last_areas)
+  end)
+
+  it("returns a table so calculate_context can merge flags", function()
+    G.GAME = { modifiers = { cm_no_after_hand = true } }
+    local ret = SMODS.calculate_card_areas("jokers", { after = true })
+    assert.equal("table", type(ret))
+  end)
+end)

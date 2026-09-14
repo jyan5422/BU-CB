@@ -30,6 +30,7 @@ load_file("mechanics.lua")
 load_file("Daily/daily_handler.lua")
 load_file("Daily/daily_mechanics.lua")
 load_file("smods/hooks.lua")
+load_file("smods/joker_timing.lua")
 
 ChallengeMod.localizeChalNames()
 ChallengeMod.localizeDailyNames()

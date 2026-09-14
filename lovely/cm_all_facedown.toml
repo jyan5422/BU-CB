@@ -37,7 +37,8 @@ overwrite = false
 [[patches]]
 [patches.pattern]
 target = "cardarea.lua"
-pattern = "local stay_flipped = G.GAME and G.GAME.blind and G.GAME.blind:stay_flipped(self, card)"
+# stay_flipped gained an `area` argument in 1.0.1o.
+pattern = "local stay_flipped = G.GAME and G.GAME.blind and G.GAME.blind:stay_flipped(self, card, area)"
 position = "before"
 payload = """
 if G.GAME.modifiers.cm_all_facedown == true then

@@ -47,7 +47,10 @@ M.SEEDED_COMPLETIONS = {
 -- Loads ChallengeMod.lua with globals stubbed. Returns a table of everything
 -- worth asserting on: the challenge list, the localization tables, the
 -- profile, and whether SMODS.Challenge was called (it must not be).
+M.last_areas = {}
+
 function M.load()
+  M.last_areas = {}
   local seeded = {}
   for k, v in pairs(M.SEEDED_COMPLETIONS) do seeded[k] = v end
 
@@ -94,6 +97,12 @@ function M.load()
       },
     },
     Challenges = {},
+    -- joker_timing.lua wraps this; the stub records what it was asked to
+    -- evaluate so a spec can assert jokers were skipped.
+    calculate_card_areas = function(area, context, return_table, args)
+      M.last_areas[#M.last_areas + 1] = area
+      return {}
+    end,
     -- Mirrors the real class: calculate and calc_dollar_bonus are no-op
     -- defaults that registered objects inherit.
     Challenge = {
