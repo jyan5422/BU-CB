@@ -22,29 +22,8 @@ position = "before"
 payload = """
 if G.GAME and G.GAME.modifiers and G.GAME.modifiers.cm_decreasing_handsize then
   local _step = G.GAME.modifiers.cm_decreasing_handsize
-  if ChallengeMod and ChallengeMod.DEBUG then
-    ChallengeMod.DEBUG.handsize_fired = ChallengeMod.DEBUG.handsize_fired + 1
-  end
   G.GAME.starting_params.hand_size = math.max(G.GAME.starting_params.hand_size - _step, 1)
   if G.hand then G.hand:change_size(-_step) end
-end
-"""
-match_indent = true
-overwrite = false
-
-# Debug counters only; the shrink itself no longer happens here.
-[[patches]]
-[patches.pattern]
-target = "blind.lua"
-pattern = "self.dollars = blind and blind.dollars or 0"
-position = "before"
-payload = """
-if ChallengeMod and ChallengeMod.DEBUG then
-  ChallengeMod.DEBUG.set_blind_calls = ChallengeMod.DEBUG.set_blind_calls + 1
-  -- get_type() has no else branch: it returns NOTHING when self.name is
-  -- empty, so tostring() would be called with no argument and error.
-  local _t = self:get_type()
-  ChallengeMod.DEBUG.last_blind_type = _t == nil and "nil" or tostring(_t)
 end
 """
 match_indent = true

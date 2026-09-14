@@ -326,3 +326,54 @@ describe("lovely patch anchors", function()
     end
   end)
 end)
+
+describe("facedown reveal on game over", function()
+  local mod
+
+  setup(function()
+    mod = harness.load()
+  end)
+
+  local function state(s)
+    G.STATES = { GAME_OVER = 9, SELECTING_HAND = 1 }
+    G.STATE = s
+  end
+
+  it("hides cards during a facedown run", function()
+    G.GAME = { modifiers = { cm_all_facedown = true } }
+    state(G.STATES and G.STATES.SELECTING_HAND or 1)
+    assert.is_true(ChallengeMod.hide_cards())
+  end)
+
+  -- The point of the reveal: read the jokers that were hidden all run.
+  it("reveals them once the run is over", function()
+    G.GAME = { modifiers = { cm_all_facedown = true } }
+    state(9)
+    assert.is_false(ChallengeMod.hide_cards())
+  end)
+
+  it("never hides when the modifier is off", function()
+    G.GAME = { modifiers = {} }
+    state(1)
+    assert.is_false(ChallengeMod.hide_cards())
+  end)
+
+  it("survives a missing G.GAME", function()
+    G.GAME = nil
+    assert.is_false(ChallengeMod.hide_cards())
+  end)
+
+  -- Hiding must go through the predicate, or the reveal cannot take effect.
+  -- Each payload that sets a card to 'back' has to be guarded by hide_cards().
+  it("routes the hide decisions through hide_cards()", function()
+    local f = assert(io.open("lovely/cm_all_facedown.toml"))
+    local patch = f:read("*a")
+    f:close()
+    for payload in patch:gmatch('payload = """(.-)"""') do
+      if payload:match("= 'back'") then
+        assert.is_truthy(payload:match("hide_cards"),
+          "this payload hides cards without consulting hide_cards():\n" .. payload)
+      end
+    end
+  end)
+end)
