@@ -32,3 +32,5 @@ Challenge.DATA = {
     banned_other = {},
   },
 }
+
+return Challenge

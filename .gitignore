@@ -1,4 +1,12 @@
-.luarc.json
-Challenges/test_challenge.lua
-Challenges/hiker.lua
-Daily/daily_challenge_depr.lua
+BU-CB.zip
+balatro.love
+result
+*.bak
+*.apk
+*.ipa
+.claude/
+.ua/
+$UA_DIR/
+graft/
+.mcp.json
+.ignore

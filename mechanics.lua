@@ -7,7 +7,9 @@ function ChallengeMod.localizeMechDescriptions()
   G.localization.misc.v_text.ch_c_all_perishable = { "All Jokers are {C:attention}Perishable{}" }
   G.localization.misc.v_text.ch_c_cm_record = { "Current Record: {C:attention}#1#{} by {C:attention}#2#{}" }
   G.localization.misc.v_text.ch_c_cm_pinned_jokers = { "All Jokers are {C:attention}Pinned{}}" }
-  G.localization.misc.v_text.ch_c_decreasing_handsize = { "Hand size {C:attention}Decreases{} each Ante" }
+  -- Key must match the rules.custom id exactly; challenges use cm_decreasing_handsize.
+  G.localization.misc.v_text.ch_c_cm_decreasing_handsize = { "Hand size {C:attention}Decreases{} each Ante" }
+  G.localization.misc.v_text.ch_c_cm_random_deck = { "Your deck is {C:attention}randomized{}" }
   G.localization.misc.v_text.ch_c_all_rental = { "All Jokers are {C:attention}Rental{}" }
   G.localization.misc.v_text.ch_c_cm_force_hand = { "Played hands must contain a {C:blue}#1#{}" }
   G.localization.misc.v_text.ch_c_cm_negative_interest = { "Money is lost from {C:attention}Interest{}" }
