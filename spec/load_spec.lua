@@ -285,3 +285,38 @@ describe("applying challenge rules", function()
     end
   end)
 end)
+
+describe("lovely patch anchors", function()
+  local function read(path)
+    local f = assert(io.open(path))
+    local s = f:read("*a")
+    f:close()
+    return s
+  end
+
+  -- Blind:get_type() derives the type from self.name, which set_blind assigns
+  -- partway through. Anchoring before that read the *previous* blind's name --
+  -- empty on the first one -- so 'Boss' never matched and the hand never
+  -- shrank, even with the modifier correctly set.
+  it("shrinks the hand after the blind's name is assigned", function()
+    local patch = read("lovely/cm_decreasing_handsize.toml")
+    assert.is_truthy(patch:match("self%.dollars = blind and blind%.dollars or 0"),
+      "anchor moved; it must sit after `self.name = ...` for get_type() to work")
+    assert.is_nil(patch:match("pattern = 'self%.config%.blind = blind or {}'"),
+      "anchored before self.name again -- get_type() will see the previous blind")
+  end)
+
+  -- Card:init runs for menu deck previews too, where G.GAME is nil, so an
+  -- unguarded G.GAME.modifiers index throws.
+  it("guards every G.GAME.modifiers read in the facedown patches", function()
+    local patch = read("lovely/cm_all_facedown.toml")
+    for line in patch:gmatch("[^\n]+") do
+      if line:match("G%.GAME%.modifiers%.cm_all_facedown") then
+        assert.is_truthy(
+          line:match("G%.GAME and G%.GAME%.modifiers and"),
+          "unguarded G.GAME.modifiers read: " .. line
+        )
+      end
+    end
+  end)
+end)
