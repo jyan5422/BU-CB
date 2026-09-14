@@ -57,6 +57,9 @@ SMODS = {
       .. "registering again duplicates every key (" .. tostring(t.key) .. ")")
   end,
   Challenges = {},
+  -- Mirrors the real class: calculate/calc_dollar_bonus are no-op defaults
+  -- that registered objects inherit.
+  Challenge = { calculate = function(self, ctx) end, calc_dollar_bonus = function(self) end },
 }
 function Game.start_run() end; function Game.draw() end
 Blind = {}; Card = {}; Sprite = function() end; UIBox_button = function() end
@@ -134,3 +137,19 @@ if #unreachable > 0 then
   error(("%d challenges would crash on run start"):format(#unreachable))
 end
 print(("OK: all %d challenges reachable via SMODS.Challenges[id].id"):format(#G.CHALLENGES))
+
+-- SMODS.eval_individual calls object:calculate(context) on the running
+-- challenge; a plain data table with no metatable has no such method.
+local uncallable = {}
+for _, d in ipairs(G.CHALLENGES) do
+  if d.id and d.id:sub(1, 2) == "cm" then
+    local obj = SMODS.Challenges[d.id]
+    local ok = obj and pcall(function() return obj:calculate({}) end)
+    if not ok then uncallable[#uncallable + 1] = d.id end
+  end
+end
+if #uncallable > 0 then
+  for _, id in ipairs(uncallable) do print("NOT CALCULABLE: " .. id) end
+  error(("%d challenges would crash in eval_individual"):format(#uncallable))
+end
+print("OK: every challenge object answers :calculate(context)")

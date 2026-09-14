@@ -22,6 +22,14 @@ for _, data in ipairs(G.CHALLENGES or {}) do
     data.key = data.key or id
     data.set = data.set or "Challenge"
     data.mod = data.mod or SMODS.current_mod
+    -- SMODS.eval_individual calls object:calculate(context), and
+    -- calculate/calc_dollar_bonus are no-op defaults on the SMODS.Challenge
+    -- class that registered objects inherit. These tables come from the
+    -- upstream handlers with no metatable, so inherit from the class rather
+    -- than reimplementing its defaults here.
+    if not getmetatable(data) then
+      setmetatable(data, { __index = SMODS.Challenge })
+    end
     SMODS.Challenges[id] = data
     published = published + 1
   end
