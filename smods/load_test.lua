@@ -37,11 +37,11 @@ G = { CHALLENGES = {}, localization = { misc = { challenge_names = {}, v_text = 
       C = {}, PROFILES = {}, SETTINGS = { profile = 1 }, UIDEF = {}, FUNCS = {} }
 SMODS = {
   current_mod = { path = "./" },
-  Modifier = function(t) registered_mods[t.key] = true end,
+  -- Deliberately no Modifier field: SMODS 1.0.0-beta-1814a has none, and
+  -- providing one here previously masked that the mod's guard never fired.
   Challenge = function(t)
-    assert(t.key, "challenge with no key")
-    assert(not registered_chals[t.key], "duplicate challenge key: " .. tostring(t.key))
-    registered_chals[t.key] = t
+    error("SMODS.Challenge called: the handlers already own G.CHALLENGES, so "
+      .. "registering again duplicates every key (" .. tostring(t.key) .. ")")
   end,
 }
 Game = {}; function Game.start_run() end; function Game.draw() end
@@ -59,22 +59,26 @@ love = { graphics = {}, filesystem = {
 
 assert(loadfile("ChallengeMod.lua"))()
 
-local nchal = 0; for _ in pairs(registered_chals) do nchal = nchal + 1 end
-local nmod  = 0; for _ in pairs(registered_mods)  do nmod  = nmod + 1  end
-print(("registered: %d challenges, %d modifiers"):format(nchal, nmod))
-print(("G.CHALLENGES leftover: %d (want 0)"):format(#G.CHALLENGES))
+local ours, seen = {}, {}
+for _, d in ipairs(G.CHALLENGES) do
+  if d.id and d.id:sub(1, 2) == "cm" then
+    assert(not seen[d.id], "duplicate challenge id in G.CHALLENGES: " .. d.id)
+    seen[d.id] = true
+    ours[#ours + 1] = d
+  end
+end
+print(("G.CHALLENGES: %d ours, %d total"):format(#ours, #G.CHALLENGES))
 
 local missing_loc, missing_mod = {}, {}
-for key, t in pairs(registered_chals) do
+for _, t in ipairs(ours) do
+  local key = t.id
   for _, v in ipairs(t.rules and t.rules.custom or {}) do
     local mod_owned = v.id:sub(1,3) == "cm_" or v.id:sub(1,3) == "dm_"
     if mod_owned and not G.localization.misc.v_text["ch_c_" .. v.id] then
       missing_loc[v.id] = (missing_loc[v.id] or "") .. " " .. key
     end
-    if not registered_mods[v.id] then missing_mod[v.id] = true end
   end
 end
 local ok = true
 for id, w in pairs(missing_loc) do print("MISSING LOCALIZATION: "..id.." <-"..w); ok=false end
-for id in pairs(missing_mod) do print("UNREGISTERED MODIFIER: "..id); ok=false end
-if ok then print("OK: every rules.custom id has localization + a registered modifier") end
+if ok then print("OK: no duplicate ids; every mod-owned rules.custom id has localization") end

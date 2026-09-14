@@ -35,4 +35,13 @@ ChallengeMod.localizeChalNames()
 ChallengeMod.localizeDailyNames()
 ChallengeMod.localizeMechDescriptions()
 
-load_file("smods/register.lua")
+-- No SMODS.Challenge registration: the upstream handlers already append their
+-- DATA tables to G.CHALLENGES, which is the list the challenge menu reads, and
+-- SMODS.Challenge.register() only inserts into that same pool -- via
+-- SMODS.add_prefixes, which rewrites ids to c_chmod_cm_mod_* and so no longer
+-- matches the raw cm_mod_* ids that localizeChalNames and the menu use.
+-- Registering here produced 33 "same key as an existing object" warnings.
+--
+-- SMODS.Modifier does not exist in SMODS 1.0.0-beta-1814a either; custom
+-- modifiers work purely through ChallengeMod.evaluate_rules plus the ch_c_*
+-- localization strings, which is why a missing string is what breaks a rule.

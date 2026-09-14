@@ -16,7 +16,6 @@ cp -r Assets Challenges Daily lovely smods \
   ChallengeMod.json ChallengeMod.lua \
   challenge_handler.lua core.lua mechanics.lua nativefs.lua \
   saved_scores.lua tags.lua "$STAGE"/
-rm -f "$STAGE/lovely/challenge_init.toml"
 rm -f "$STAGE/smods/load_test.lua" "$STAGE/smods/gen_core_shared.sh"
 cd /tmp && zip -rq /home/yanjh/BU-CB/BU-CB.zip ChallengeMod/
 sudo tailscale file cp --name "BU-CB-$(date +%Y%m%d-%H%M).zip" /home/yanjh/BU-CB/BU-CB.zip jamess-galaxy-note10:
