@@ -1,0 +1,13 @@
+-- busted configuration. Run with: busted
+return {
+  _all = {
+    -- Specs require("spec.harness"); the repo root must be on the Lua path,
+    -- and the harness loads ChallengeMod.lua by relative path, so the working
+    -- directory has to be the root too.
+    lpath = "./?.lua;./?/init.lua",
+  },
+  default = {
+    ROOT = { "spec" },
+    verbose = true,
+  },
+}

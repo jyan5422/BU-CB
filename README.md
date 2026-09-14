@@ -29,11 +29,17 @@ Upstream loads through the Lovely injector directly. This fork adds a
 keeping the upstream challenge/mechanic files unmodified so changes stay easy to
 pull in. The per-mechanic patches under `lovely/` still apply as Lovely patches.
 
-`smods/load_test.lua` runs the load chain headlessly:
+The spec suite in `spec/` runs the whole load chain headlessly against stubs
+([busted](https://lunarmodules.github.io/busted/), Lua 5.1 to match LuaJIT):
 
 ```sh
-lua smods/load_test.lua
+./run_tests.sh
 ```
+
+Each case corresponds to a crash that actually happened -- missing rule
+localization, duplicate registration, and the two SMODS lookups a challenge run
+performs (`SMODS.Challenges[id]` and `object:calculate(context)`) -- plus the
+save-completion migration across every historical id scheme.
 
 > [!WARNING]
 > Unreleased code may have fatal errors.
