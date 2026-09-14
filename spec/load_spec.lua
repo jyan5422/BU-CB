@@ -235,3 +235,48 @@ describe("joker timing modifiers", function()
     assert.equal("table", type(ret))
   end)
 end)
+
+describe("applying challenge rules", function()
+  local mod
+
+  setup(function()
+    mod = harness.load()
+  end)
+
+  -- Game:start_run has to walk the running challenge's rules.custom and hand
+  -- each entry to evaluate_rules; that is what sets G.GAME.modifiers. It read
+  -- G.GAME.challenge (the id string) instead of challenge_tab (the table), so
+  -- .rules was nil and all 16 evaluate_rules modifiers silently did nothing.
+  local function start(challenge)
+    G.GAME = { modifiers = {}, challenge = challenge.id, challenge_tab = challenge }
+    Game.start_run(G, { challenge = challenge })
+  end
+
+  it("sets the modifier for a challenge's custom rules", function()
+    local mama
+    for _, c in ipairs(mod.ours) do
+      if c.name == "Mama Mia" then mama = c end
+    end
+    assert.is_truthy(mama, "Mama Mia missing from the challenge list")
+
+    start(mama)
+    assert.equal(1, G.GAME.modifiers.cm_decreasing_handsize)
+  end)
+
+  it("applies every rule, not just the first", function()
+    local challenge = {
+      id = "cm_spec_multi",
+      rules = { custom = { { id = "cm_noshop" }, { id = "cm_decreasing_handsize", value = 2 } } },
+    }
+    start(challenge)
+    assert.is_true(G.GAME.modifiers.cm_noshop)
+    assert.equal(2, G.GAME.modifiers.cm_decreasing_handsize)
+  end)
+
+  it("does nothing outside a challenge run", function()
+    G.GAME = { modifiers = {} }
+    assert.has_no_errors(function()
+      Game.start_run(G, {})
+    end)
+  end)
+end)

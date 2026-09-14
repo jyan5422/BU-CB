@@ -7,8 +7,11 @@
 local start_run_ref = Game.start_run
 function Game:start_run(args)
   start_run_ref(self, args)
-  local custom = self.GAME and self.GAME.challenge and self.GAME.challenge.rules
-    and self.GAME.challenge.rules.custom
+  -- G.GAME.challenge is the id string; challenge_tab holds the table. Reading
+  -- .rules off the id silently yielded nil, so no custom rule was ever
+  -- evaluated and every evaluate_rules modifier did nothing.
+  local tab = self.GAME and self.GAME.challenge_tab
+  local custom = tab and tab.rules and tab.rules.custom
   if not custom then return end
   for _, v in ipairs(custom) do
     ChallengeMod.evaluate_rules(self, v)
