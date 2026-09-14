@@ -13,8 +13,15 @@ target = "blind.lua"
 pattern = "self.dollars = blind and blind.dollars or 0"
 position = "before"
 payload = """
-if G.GAME.modifiers.cm_decreasing_handsize and self:get_type() == 'Boss' and G.hand then
+if ChallengeMod and ChallengeMod.DEBUG then
+  ChallengeMod.DEBUG.set_blind_calls = ChallengeMod.DEBUG.set_blind_calls + 1
+  ChallengeMod.DEBUG.last_blind_type = tostring(self:get_type())
+end
+if G.GAME and G.GAME.modifiers and G.GAME.modifiers.cm_decreasing_handsize and self:get_type() == 'Boss' and G.hand then
   G.hand:change_size(-G.GAME.modifiers.cm_decreasing_handsize)
+  if ChallengeMod and ChallengeMod.DEBUG then
+    ChallengeMod.DEBUG.handsize_fired = ChallengeMod.DEBUG.handsize_fired + 1
+  end
 end
 """
 match_indent = true

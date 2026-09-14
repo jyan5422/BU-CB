@@ -31,6 +31,9 @@ load_file("Daily/daily_handler.lua")
 load_file("Daily/daily_mechanics.lua")
 load_file("smods/hooks.lua")
 load_file("smods/joker_timing.lua")
+-- Temporary: on-screen counters for the handsize/facedown investigation.
+-- Remove this line and smods/debug_overlay.lua once both are confirmed.
+load_file("smods/debug_overlay.lua")
 
 ChallengeMod.localizeChalNames()
 ChallengeMod.localizeDailyNames()

@@ -19,8 +19,13 @@ overwrite = false
 target = "card.lua"
 pattern = """self.facing = 'front'"""
 position = "after"
-payload = """if G.GAME and G.GAME.modifiers and G.GAME.modifiers.cm_all_facedown == true then
-self.facing = 'back' end"""
+payload = """if ChallengeMod and ChallengeMod.DEBUG then
+ChallengeMod.DEBUG.card_init_calls = ChallengeMod.DEBUG.card_init_calls + 1 end
+if G.GAME and G.GAME.modifiers and G.GAME.modifiers.cm_all_facedown == true then
+self.facing = 'back'
+if ChallengeMod and ChallengeMod.DEBUG then
+ChallengeMod.DEBUG.facedown_fired = ChallengeMod.DEBUG.facedown_fired + 1 end
+end"""
 match_indent = true
 overwrite = false
 
