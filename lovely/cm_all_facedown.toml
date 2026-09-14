@@ -34,7 +34,9 @@ overwrite = false
 target = "card.lua"
 pattern = """self.sprite_facing = 'front'"""
 position = "after"
-payload = """if G.GAME and G.GAME.modifiers and G.GAME.modifiers.cm_all_facedown == true then
+# Exempt cards in hand: the rule is "all cards except those held in hand".
+# self.area is nil during Card:init and set later, so both are handled.
+payload = """if G.GAME and G.GAME.modifiers and G.GAME.modifiers.cm_all_facedown == true and (not self.area or self.area ~= G.hand) then
 self.sprite_facing = 'back' end"""
 match_indent = true
 overwrite = false
@@ -47,6 +49,42 @@ pattern = "local stay_flipped = G.GAME and G.GAME.blind and G.GAME.blind:stay_fl
 position = "before"
 payload = """
 if G.GAME and G.GAME.modifiers and G.GAME.modifiers.cm_all_facedown == true then
+card.facing = 'front'
+card.sprite_facing = 'front'
+end
+"""
+match_indent = true
+overwrite = false
+
+# The rule is "all cards EXCEPT those held in hand", so the hand has to be
+# forced back to front. These three were in the pre-migration build and are
+# absent from upstream's version, which is why every card showed face down.
+
+[[patches]]
+[patches.pattern]
+target = "cardarea.lua"
+pattern = "function CardArea:align_cards()"
+position = "after"
+payload = """
+if G.GAME and G.GAME.modifiers and G.GAME.modifiers.cm_all_facedown == true and self == G.hand then
+for _, _c in ipairs(self.cards) do
+if _c.facing ~= 'front' and not _c.flipping then
+_c.facing = 'front'
+_c.sprite_facing = 'front'
+end
+end
+end
+"""
+match_indent = true
+overwrite = false
+
+[[patches]]
+[patches.pattern]
+target = "cardarea.lua"
+pattern = "if self == G.hand and stay_flipped then"
+position = "after"
+payload = """
+if G.GAME and G.GAME.modifiers and G.GAME.modifiers.cm_all_facedown == true and self == G.hand then
 card.facing = 'front'
 card.sprite_facing = 'front'
 end

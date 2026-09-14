@@ -298,12 +298,18 @@ describe("lovely patch anchors", function()
   -- partway through. Anchoring before that read the *previous* blind's name --
   -- empty on the first one -- so 'Boss' never matched and the hand never
   -- shrank, even with the modifier correctly set.
-  it("shrinks the hand after the blind's name is assigned", function()
+  -- "decreases each Ante" means after an ante completes. Hooking the boss
+  -- blind shrank mid-ante instead, so ante 1 ended at 9 rather than 10.
+  it("shrinks the hand at ante end, not on boss blind", function()
     local patch = read("lovely/cm_decreasing_handsize.toml")
-    assert.is_truthy(patch:match("self%.dollars = blind and blind%.dollars or 0"),
-      "anchor moved; it must sit after `self.name = ...` for get_type() to work")
-    assert.is_nil(patch:match("pattern = 'self%.config%.blind = blind or {}'"),
-      "anchored before self.name again -- get_type() will see the previous blind")
+    assert.is_truthy(patch:match("set_eternal_ante"),
+      "handsize must hook end_round(), where the ante boundary is")
+    assert.is_nil(patch:match("get_type%(%) == 'Boss'"),
+      "shrinking on the boss blind fires during the ante, not after it")
+    -- The hand is sized from starting_params each round, so the live area
+    -- alone would be reset.
+    assert.is_truthy(patch:match("starting_params%.hand_size"),
+      "must persist the shrink in starting_params")
   end)
 
   -- Card:init runs for menu deck previews too, where G.GAME is nil, so an

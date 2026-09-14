@@ -3,13 +3,39 @@ version = "1.0.0"
 dump_lua = true
 priority = 0
 
+# Shrinks at ANTE END, not on boss-blind set.
+#
+# Upstream hooked Blind:set_blind and shrank on the boss blind, but the
+# boss blind is played *during* an ante, so ante 1 already ended at 9 instead of
+# 10 -- the rule is "decreases each Ante", i.e. after one completes. This is the
+# anchor the pre-migration build used: inside end_round(), which runs at the
+# ante boundary.
+#
+# starting_params.hand_size is updated as well as the live area, because the
+# hand is sized from starting_params each round, so changing only G.hand would
+# be undone.
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "if G.GAME.modifiers.set_eternal_ante and (G.GAME.round_resets.ante == G.GAME.modifiers.set_eternal_ante) then"
+position = "before"
+payload = """
+if G.GAME and G.GAME.modifiers and G.GAME.modifiers.cm_decreasing_handsize then
+  local _step = G.GAME.modifiers.cm_decreasing_handsize
+  if ChallengeMod and ChallengeMod.DEBUG then
+    ChallengeMod.DEBUG.handsize_fired = ChallengeMod.DEBUG.handsize_fired + 1
+  end
+  G.GAME.starting_params.hand_size = math.max(G.GAME.starting_params.hand_size - _step, 1)
+  if G.hand then G.hand:change_size(-_step) end
+end
+"""
+match_indent = true
+overwrite = false
+
+# Debug counters only; the shrink itself no longer happens here.
 [[patches]]
 [patches.pattern]
 target = "blind.lua"
-# Anchored after self.name is set, not before self.config.blind. get_type()
-# derives the type from self.name, so running earlier tested the *previous*
-# blind -- empty on the first one, so it never matched 'Boss'. The game's own
-# no_blind_reward check sits right here for the same reason.
 pattern = "self.dollars = blind and blind.dollars or 0"
 position = "before"
 payload = """
@@ -19,12 +45,6 @@ if ChallengeMod and ChallengeMod.DEBUG then
   -- empty, so tostring() would be called with no argument and error.
   local _t = self:get_type()
   ChallengeMod.DEBUG.last_blind_type = _t == nil and "nil" or tostring(_t)
-end
-if G.GAME and G.GAME.modifiers and G.GAME.modifiers.cm_decreasing_handsize and self:get_type() == 'Boss' and G.hand then
-  G.hand:change_size(-G.GAME.modifiers.cm_decreasing_handsize)
-  if ChallengeMod and ChallengeMod.DEBUG then
-    ChallengeMod.DEBUG.handsize_fired = ChallengeMod.DEBUG.handsize_fired + 1
-  end
 end
 """
 match_indent = true
