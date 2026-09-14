@@ -33,8 +33,21 @@ end })
 package.loaded["nativefs"] = nativefs_stub()
 
 local registered_mods, registered_chals = {}, {}
+-- Seed completions in all three legacy schemes to prove the migration finds
+-- each one: BU-CB, the SMODS-prefixed variant, and a generated-id variant.
+local SEEDED = {
+  ["c_mod_facedown_1"] = true,                 -- BU-CB            -> Anapodaphobia
+  ["c_chmod_c_mod_bullseye_1"] = true,         -- SMODS-prefixed   -> Bullseye
+  ["c_chmod_cm_mod_Tarot_Tycoon_1"] = true,    -- SMODS generated  -> Tarot Tycoon
+  ["c_mod_butterfingers"] = true,              -- no _1 suffix     -> Butterfingers
+  ["c_mod_unfortunate_1"] = true,              -- renamed          -> Tarot Torture
+  ["c_mod_who_knows_1"] = true,                -- unknown, must be left alone
+}
 G = { CHALLENGES = {}, localization = { misc = { challenge_names = {}, v_text = {} } },
-      C = {}, PROFILES = {}, SETTINGS = { profile = 1 }, UIDEF = {}, FUNCS = {} }
+      C = {}, SETTINGS = { profile = 1 }, UIDEF = {}, FUNCS = {},
+      PROFILES = { [1] = { challenge_progress = { completed = SEEDED, unlocked = {} } } },
+      SAVE_MANAGER = nil }
+Game = { load_profile = function() end, save_settings = function() end }
 SMODS = {
   current_mod = { path = "./" },
   -- Deliberately no Modifier field: SMODS 1.0.0-beta-1814a has none, and
@@ -43,10 +56,14 @@ SMODS = {
     error("SMODS.Challenge called: the handlers already own G.CHALLENGES, so "
       .. "registering again duplicates every key (" .. tostring(t.key) .. ")")
   end,
+  Challenges = {},
 }
-Game = {}; function Game.start_run() end; function Game.draw() end
+function Game.start_run() end; function Game.draw() end
 Blind = {}; Card = {}; Sprite = function() end; UIBox_button = function() end
 localize = function() return "" end
+sendInfoMessage = function() end
+sendWarnMessage = function() end
+UIBox_button = function(t) return { config = t } end
 STR_UNPACK = function(str) local f = loadstring(tostring(str)); return f and f() or nil end
 STR_PACK = function(t) return "{}" end
 love = { graphics = {}, filesystem = {
@@ -69,6 +86,7 @@ for _, d in ipairs(G.CHALLENGES) do
 end
 print(("G.CHALLENGES: %d ours, %d total"):format(#ours, #G.CHALLENGES))
 
+
 local missing_loc, missing_mod = {}, {}
 for _, t in ipairs(ours) do
   local key = t.id
@@ -82,3 +100,37 @@ end
 local ok = true
 for id, w in pairs(missing_loc) do print("MISSING LOCALIZATION: "..id.." <-"..w); ok=false end
 if ok then print("OK: no duplicate ids; every mod-owned rules.custom id has localization") end
+
+-- Migration: each seeded legacy key must now also be set under the current id.
+local EXPECT = { ["Anapodaphobia"]=1, ["Bullseye"]=1, ["Tarot Tycoon"]=1,
+                 ["Butterfingers"]=1, ["Tarot Torture"]=1 }
+local done = G.PROFILES[1].challenge_progress.completed
+local ok_m = true
+for _, d in ipairs(G.CHALLENGES) do
+  if EXPECT[d.name] then
+    if done[d.id] then EXPECT[d.name] = "ok"
+    else print("MIGRATION FAILED: " .. d.name .. " (" .. tostring(d.id) .. ")"); ok_m = false end
+  end
+end
+for n, v in pairs(EXPECT) do
+  if v ~= "ok" then print("MIGRATION MISSING: challenge not found in list: " .. n); ok_m = false end
+end
+assert(done["c_mod_who_knows_1"], "migration must not delete unknown keys")
+if ok_m then print("OK: migrated all 5 legacy schemes; unknown keys untouched") end
+
+-- Starting a challenge run: SMODS.calculate_card_areas does
+-- SMODS.Challenges[G.GAME.challenge].id, so every challenge the menu offers
+-- must be reachable there under the id the game stores. Missing entries
+-- crashed on the first debuff_card of any run.
+local unreachable = {}
+for _, d in ipairs(G.CHALLENGES) do
+  if d.id and d.id:sub(1, 2) == "cm" then
+    local obj = SMODS.Challenges[d.id]
+    if not obj or not obj.id then unreachable[#unreachable + 1] = d.id end
+  end
+end
+if #unreachable > 0 then
+  for _, id in ipairs(unreachable) do print("NOT IN SMODS.Challenges: " .. id) end
+  error(("%d challenges would crash on run start"):format(#unreachable))
+end
+print(("OK: all %d challenges reachable via SMODS.Challenges[id].id"):format(#G.CHALLENGES))
