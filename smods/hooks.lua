@@ -16,12 +16,11 @@ function Game:start_run(args)
   end
 end
 
--- challenge_init.toml patches game.lua before love.graphics.setCanvas(G.AA_CANVAS).
-local game_draw_ref = Game.draw
-function Game:draw()
-  game_draw_ref(self)
-  ChallengeMod.draw()
-end
+-- challenge_init.toml patched game.lua before love.graphics.setCanvas(G.AA_CANVAS)
+-- to call ChallengeMod.draw(), which prints the mod version in the top-left
+-- corner whenever RELEASE is false. That overlay is not wanted here, so the
+-- hook is left out. Flipping RELEASE instead would also drop the per-challenge
+-- VERSION line from the rules box, which is worth keeping.
 
 -- ChallengeMod.update(dt) is defined in core.lua but never called upstream
 -- either, so it stays unwired here: enabling it would start the daily score
