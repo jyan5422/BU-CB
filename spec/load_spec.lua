@@ -377,3 +377,63 @@ describe("facedown reveal on game over", function()
     end
   end)
 end)
+
+describe("facedown reveal actually flips cards", function()
+  local mod
+
+  setup(function()
+    mod = harness.load()
+  end)
+
+  -- The predicate alone was not enough: Card:init sets facing once, at
+  -- creation, so by game over every card already exists and nothing re-asks.
+  -- The reveal has to flip them explicitly.
+  local function hidden_card()
+    return { facing = "back", sprite_facing = "back" }
+  end
+
+  it("flips existing cards front", function()
+    G.jokers = { cards = { hidden_card(), hidden_card() } }
+    G.consumeables = { cards = { hidden_card() } }
+    local counts = ChallengeMod.reveal_all()
+    assert.equal(2, counts.jokers)
+    assert.equal(1, counts.consumeables)
+    for _, c in ipairs(G.jokers.cards) do
+      assert.equal("front", c.facing)
+      assert.equal("front", c.sprite_facing)
+    end
+  end)
+
+  it("clears a pending flip so the animation cannot re-hide", function()
+    G.jokers = { cards = { { facing = "back", sprite_facing = "back", flipping = "f2b" } } }
+    ChallengeMod.reveal_all()
+    assert.is_nil(G.jokers.cards[1].flipping)
+  end)
+
+  it("skips cards already face up", function()
+    G.jokers = { cards = { { facing = "front", sprite_facing = "front" } } }
+    local counts = ChallengeMod.reveal_all()
+    assert.is_nil(counts.jokers)
+  end)
+
+  it("tolerates missing card areas", function()
+    G.jokers, G.consumeables, G.hand, G.deck, G.discard, G.play = nil, nil, nil, nil, nil, nil
+    assert.has_no_errors(function() ChallengeMod.reveal_all() end)
+  end)
+
+  -- Game:update drives it, so the reveal must fire from the state alone.
+  it("fires on the transition into game over", function()
+    G.STATES = { GAME_OVER = 9, SELECTING_HAND = 1 }
+    G.GAME = { modifiers = { cm_all_facedown = true } }
+    G.jokers = { cards = { hidden_card() } }
+    ChallengeMod._revealed = nil
+
+    G.STATE = 1
+    Game.update(G, 0.016)
+    assert.equal("back", G.jokers.cards[1].facing, "revealed while the run was still going")
+
+    G.STATE = 9
+    Game.update(G, 0.016)
+    assert.equal("front", G.jokers.cards[1].facing, "did not reveal at game over")
+  end)
+end)
