@@ -9,9 +9,8 @@ challenge that happens to list all of them.
 
 ## Status
 
-Design under review. Nothing implemented yet — a draft of the comparison logic
-exists outside the repo and will be rewritten against whatever this doc settles
-on.
+Design agreed; implementation next. Seven modifiers, of which the trick lock is
+the only substantial one.
 
 ## The modifiers
 
@@ -126,11 +125,56 @@ refunds to points.
 It also reads right: keeping control of the trick means you never had to pass,
 so you get the pass back.
 
+### 7. `cm_shed_bonus` — going out pays, by how you go out
+
+Playing your **last** card earns an Xmult graded on the hand you go out with,
+taken from `G.handlist` so it needs no ranking of its own:
+
+`Xmult = 1 + (tier - 1) * 0.5`, where tier 1 is High Card and 12 is Flush Five.
+
+| exit hand | Xmult |
+|---|---|
+| Flush Five | 6.5x |
+| Flush House | 6.0x |
+| Five of a Kind | 5.5x |
+| Straight Flush | 5.0x |
+| Four of a Kind | 4.5x |
+| Full House | 4.0x |
+| Flush | 3.5x |
+| Straight | 3.0x |
+| Three of a Kind | 2.5x |
+| Two Pair | 2.0x |
+| Pair | 1.5x |
+| High Card | none (1x) |
+
+High Card landing on exactly 1x is what makes this work: dumping your last five
+junk cards still gets you out, but pays nothing. Going out on a hand you held
+back deliberately pays properly. Combined with the cheap junk *opener*, the
+ideal round is open weak, climb, exit strong.
+
+The top tiers are close to unreachable, since the exit must also match the
+locked size and beat it, so they are trophies rather than balance concerns.
+
+**Emptying your hand ends the round**, resolving through the existing check: if
+the blind is met you advance, if not you lose. Without this you are stranded --
+`can_play` is gated on `#G.hand.highlighted <= 0`, so with no cards you cannot
+play, only burn discards on passes you can never follow up. Ending it is honest
+about a position that is already decided.
+
+That makes the shed bonus a real gamble: go out for the Xmult and it had better
+clear the blind, because there is no next hand. Going out early is how you lose
+in Big 2 too.
+
+**Do not implement this by zeroing `card_limit`.** The game-over check at
+`functions/state_events.lua:330` fires when `card_limit <= 0` *and* the hand is
+empty, so clearing the limit would turn the reward into an instant loss. An
+empty hand with the limit still at 13 is safe -- it simply draws nothing.
+
 ## The challenge
 
 - Hand size **13** (52 / 4 players), dealt per round
 - **4** hands, **4** discards to start — a guess, to be tuned by play
-- All six modifiers above
+- All seven modifiers above
 - **The Psychic banned** (`bl_psychic`, `debuff = {h_size_ge = 5}`): it requires
   every played hand to contain 5 cards, so a 1-, 2- or 3-card lock would make
   every legal continuation illegal and the round unwinnable. It runs through the
@@ -162,6 +206,7 @@ Each should fit on one line, like a joker:
 - Hands must match the last hand's size and beat its rank.
 - Same size and higher rank earns a discard.
 - Discard nothing to pass.
+- Play your last card for Xmult, better hands pay more.
 
 ## Open questions
 
@@ -170,11 +215,15 @@ Each should fit on one line, like a joker:
    may be awkward in the UI code; an `attention_text` popup is the fallback.
 2. **Starting hands and discards.** 4/4 is a starting guess, not a considered
    number.
-3. **Do cards redraw after a discard?** Earlier drafts said no, on the theory
-   that a Big 2 hand is dealt once. With card discards now allowed, no-redraw
-   makes them permanently shrink the hand, which may be too steep a price for
-   joker synergies. Undecided: redrawing is the safer default and the simpler
-   rule, since it needs no new modifier at all.
+3. **Is 13 enough compensation for no redraw?** Decided yes: 13 cards buys two
+   full 5-card plays plus a trailing 3, so a round is 2-3 plays before the hand
+   runs dry, and the drawdown is the point rather than a cost. If it plays too
+   harshly the dial is the hand size (13 -> 15), not a new mechanic.
+
+**v2 candidate:** mult rising as the hand shrinks, so the endgame is the
+strongest moment. Very Balatro and very Big 2 -- it would turn the drawdown
+from a cost into a build -- but it is another modifier and more balance
+surface, so it waits until the base version has been played.
 
 ## Note on verification
 
