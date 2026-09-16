@@ -6,8 +6,10 @@
 ChallengeMod.Draw = ChallengeMod.Draw or {}
 local Draw = ChallengeMod.Draw
 
+-- Truthy rather than == true: the modifier holds the hand size bonus when one
+-- is given, so a numeric value still means the rule is on.
 local function active()
-  return G.GAME and G.GAME.modifiers and G.GAME.modifiers.cm_no_redraw == true
+  return G.GAME and G.GAME.modifiers and G.GAME.modifiers.cm_no_redraw and true or false
 end
 
 --- Should this draw be allowed? Called from the patch in
@@ -30,4 +32,18 @@ function Draw.allow()
   -- mutated field by field between rounds rather than replaced, so a custom
   -- key survived and blocked the next round's opening deal.
   return not (G.GAME.current_round and G.GAME.current_round.any_hand_drawn)
+end
+
+-- cm_no_redraw carries a value: the hand size bonus applied on top of whatever
+-- the deck and challenge already give. Written as a bonus rather than a flat
+-- size so it composes -- base 8 becomes 13, and a Painted Deck's +2 becomes 15
+-- rather than being overridden.
+--
+-- Applied to starting_params, which start_run reads to size the hand area, so
+-- it has to land before that. evaluate_rules runs inside the rule loop, which
+-- is earlier in start_run than the hand is built.
+function Draw.hand_bonus()
+  if not active() then return 0 end
+  local v = G.GAME.modifiers.cm_no_redraw
+  return type(v) == "number" and v or 0
 end

@@ -136,11 +136,18 @@ refunds to points.
 It also reads right: keeping control of the trick means you never had to pass,
 so you get the pass back.
 
-### 7. `cm_no_redraw` — the hand is dealt once
+### 7. `cm_no_redraw` — hand size +N, and nothing drawn after
 
-Thirteen cards at the start of a round, and nothing drawn after. Playing five
-leaves eight: the dwindling hand is the game, and it is what produces the Big 2
-endgame of holding three cards that have to do something.
+> +5 hand size, but no cards are drawn until the next round
+
+Written as a **bonus, not a flat size**, so it composes with whatever the deck
+or challenge already grants: the vanilla base of 8 becomes 13, the Big 2 deal,
+while a Painted Deck's +2 becomes 15 instead of being overridden. The value is
+the bonus, so the rule reads as one line like a joker's.
+
+The dwindling hand is the game: playing five of thirteen leaves eight, and that
+is what produces the Big 2 endgame of holding three cards that have to do
+something.
 
 The opening deal and every refill share one function, so the patch cannot
 simply block all draws -- the round would start empty. `ChallengeMod.Draw`
@@ -198,7 +205,7 @@ empty hand with the limit still at 13 is safe -- it simply draws nothing.
 
 ## The challenge
 
-- Hand size **13** (52 / 4 players), dealt per round
+- Hand size **+5**, giving the 13 that Big 2 deals from a vanilla base of 8
 - **4** hands, **4** discards to start — a guess, to be tuned by play
 - All eight modifiers above
 - **The Psychic banned** (`bl_psychic`, `debuff = {h_size_ge = 5}`): it requires
@@ -229,7 +236,7 @@ through chips alone.
 
 Each should fit on one line, like a joker:
 
-- Your hand is dealt once per round.
+- +5 hand size, but no cards are drawn until the next round.
 - Hands must match the last hand's size and beat its rank.
 - Same size and higher rank earns a discard.
 - Discard nothing to pass.

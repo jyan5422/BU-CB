@@ -14,13 +14,12 @@ Challenge.DATA = {
       { id = "cm_rank_chips" },
       { id = "cm_suit_chips" },
       { id = "cm_wrap_straights" },
-      { id = "cm_no_redraw" },
+      -- +5 on the base 8 gives the 13 Big 2 deals, and breathes with any
+      -- deck that already changes hand size.
+      { id = "cm_no_redraw", value = 5 },
     },
     modifiers = {
-      -- 52 cards over 4 players, as Big 2 deals. Nothing is drawn after a
-      -- play, so this is the whole round's supply: worth two 5-card plays and
-      -- a trailing 3.
-      { id = "hand_size", value = 13 },
+      -- Hand size comes from cm_no_redraw's +5, not a flat value here.
       { id = "hands", value = 4 },
       { id = "discards", value = 4 },
     },

@@ -18,7 +18,7 @@ function ChallengeMod.localizeMechDescriptions()
   G.localization.misc.v_text.ch_c_cm_rank_chips = { "{C:attention}2{} is the highest card, and scores like it" }
   G.localization.misc.v_text.ch_c_cm_suit_chips = { "{C:attention}Spades{} score most, then hearts, clubs, diamonds" }
   G.localization.misc.v_text.ch_c_cm_wrap_straights = { "{C:attention}Straights{} may wrap around" }
-  G.localization.misc.v_text.ch_c_cm_no_redraw = { "Your hand is dealt {C:attention}once{} per round" }
+  G.localization.misc.v_text.ch_c_cm_no_redraw = { "{C:attention}+#1#{} hand size, but no cards are drawn until the next round" }
   G.localization.misc.v_text.ch_c_all_rental = { "All Jokers are {C:attention}Rental{}" }
   G.localization.misc.v_text.ch_c_cm_force_hand = { "Played hands must contain a {C:blue}#1#{}" }
   G.localization.misc.v_text.ch_c_cm_negative_interest = { "Money is lost from {C:attention}Interest{}" }
@@ -76,7 +76,13 @@ function ChallengeMod.evaluate_rules(self, v)
   elseif v.id == 'cm_wrap_straights' then
     self.GAME.modifiers.cm_wrap_straights = true
   elseif v.id == 'cm_no_redraw' then
-    self.GAME.modifiers.cm_no_redraw = true
+    -- Value is the hand size bonus, so the rule reads "hand size +N, no
+    -- redraw" and rides whatever the deck already grants.
+    local bonus = tonumber(v.value) or 0
+    self.GAME.modifiers.cm_no_redraw = bonus > 0 and bonus or true
+    if bonus > 0 and self.GAME.starting_params then
+      self.GAME.starting_params.hand_size = self.GAME.starting_params.hand_size + bonus
+    end
   elseif v.id == 'cm_decreasing_handsize' then
     self.GAME.modifiers.cm_decreasing_handsize = v.value
   elseif v.id == 'cm_scaling' then

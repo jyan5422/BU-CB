@@ -400,6 +400,28 @@ describe("no redraw", function()
     assert.is_true(Draw.allow())
   end)
 
+  -- The modifier holds the hand size bonus, so its value is a number rather
+  -- than true. Testing == true would silently disable the whole rule.
+  it("is still active when the value is a number", function()
+    G.GAME.modifiers.cm_no_redraw = 5
+    G.GAME.current_round.any_hand_drawn = true
+    assert.is_false(Draw.allow())
+  end)
+
+  it("reports the hand size bonus", function()
+    G.GAME.modifiers.cm_no_redraw = 5
+    assert.equal(5, Draw.hand_bonus())
+  end)
+
+  it("reports no bonus when given a bare true", function()
+    G.GAME.modifiers.cm_no_redraw = true
+    assert.equal(0, Draw.hand_bonus())
+  end)
+
+  it("reports no bonus when off", function()
+    assert.equal(0, Draw.hand_bonus())
+  end)
+
   -- The opening deal goes through the same function as every refill, so
   -- blocking all draws would start the round with an empty hand.
   it("allows the opening deal", function()
