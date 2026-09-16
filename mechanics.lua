@@ -14,7 +14,7 @@ function ChallengeMod.localizeMechDescriptions()
   G.localization.misc.v_text.ch_c_cm_trick_lock = { "Hands must match the last hand's {C:attention}size{} and beat its {C:attention}rank{}" }
   G.localization.misc.v_text.ch_c_cm_pass = { "Discard nothing to {C:attention}pass{}" }
   G.localization.misc.v_text.ch_c_cm_trick_refund = { "Beating the last hand earns a {C:red}discard{}" }
-  G.localization.misc.v_text.ch_c_cm_shed_bonus = { "Play your {C:attention}last card{} for {C:mult}Xmult{}, better hands pay more" }
+  G.localization.misc.v_text.ch_c_cm_shed_bonus = { "{X:mult,C:white}Xmult{} for the hand that {C:attention}empties your hand{}, higher hands give more" }
   G.localization.misc.v_text.ch_c_cm_rank_chips = { "{C:attention}2{} is the highest card, and scores like it" }
   G.localization.misc.v_text.ch_c_cm_suit_chips = { "{C:attention}Spades{} score most, then hearts, clubs, diamonds" }
   G.localization.misc.v_text.ch_c_cm_wrap_straights = { "{C:attention}Straights{} may wrap around" }

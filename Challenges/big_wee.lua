@@ -21,7 +21,9 @@ Challenge.DATA = {
     modifiers = {
       -- Hand size comes from cm_no_redraw's +5, not a flat value here.
       { id = "hands", value = 4 },
-      { id = "discards", value = 4 },
+      -- Default 3: a challenge should feel like a boss, and passes are meant
+      -- to be scarce.
+      { id = "discards", value = 3 },
     },
   },
   jokers = {},

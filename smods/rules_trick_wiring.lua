@@ -82,6 +82,14 @@ G.FUNCS.discard_cards_from_highlighted = function(e, hook)
   local ret = discard_ref and discard_ref(e, hook)
 
   if passing then
+    -- The game's discard body is wrapped in `if highlighted_count > 0`, so
+    -- with nothing selected it never reaches ease_discard(-1) and the pass
+    -- would be free. Charge it here, and move the round on: the same guard
+    -- skips the DRAW_TO_HAND transition too.
+    if ease_discard then ease_discard(-1) end
+    if G.GAME.current_round then
+      G.GAME.current_round.discards_used = (G.GAME.current_round.discards_used or 0) + 1
+    end
     Trick.clear_lock()
     alert("pass")
   end
