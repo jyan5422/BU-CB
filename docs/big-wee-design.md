@@ -53,24 +53,28 @@ first.
 The lock lives on `G.GAME.current_round`, which the game clears each round, so
 it resets per blind for free.
 
-### 2. `cm_pass_only_discard` — discard becomes pass
+### 2. `cm_pass` — discard nothing to pass
 
-Discard is allowed **only with no cards selected**. It spends a discard, clears
-the lock, and leaves the hand untouched. With cards selected the button is
-disabled: cards are never discarded, only played or held.
+Discarding with **no cards selected** is allowed: it spends a discard, clears
+the lock, and leaves the hand untouched. Normal discards still work as usual.
 
-This is closer to Big 2 than discarding-to-improve, which does not exist there.
-It is also the escape valve — without a pass you could hold 13 cards that
-cannot make the locked shape.
+Only one gate needs changing, the `#G.hand.highlighted <= 0` condition in
+`G.FUNCS.can_discard` (`functions/button_callbacks.lua`). The discard path
+already handles zero cards — it counts `#cards` generically and spends one
+discard.
 
-One gate governs this, `G.FUNCS.can_discard`
-(`functions/button_callbacks.lua`), whose `#G.hand.highlighted <= 0` condition
-is inverted. The discard path itself already handles zero cards: it counts
-`#cards` generically and spends one discard.
+The pass is the escape valve: without it you could hold 13 cards that cannot
+make the locked shape and cannot afford to discard into a worse position.
 
-**Consequence:** every discard-triggered joker becomes dead, and every
-discard-scaling joker stays at zero. Those must be banned in
-`restrictions.banned_cards` or players will buy jokers that cannot work.
+**Discarding cards does not clear the lock** — only a pure pass does.
+Otherwise discarding would be strictly better than passing and the pass would
+have no reason to exist.
+
+Earlier drafts made discard *pass-only*, banning card discards outright. That
+was rejected: discards feeding jokers and money is core Balatro (Faint, Ramen,
+Trading Card, Castle, Mail-In Rebate), and banning them would have meant
+banning a large slice of the joker pool, making the challenge narrower rather
+than more interesting.
 
 ### 3. `cm_rank_chips` — Big 2 rank values as chips
 
@@ -90,8 +94,18 @@ highest scoring and the ordering is legible from the numbers alone.
 
 ### 4. `cm_suit_chips` — spades beat hearts beat clubs beat diamonds
 
-Also via `perma_bonus`, on top of the rank bonus. Amounts still to be chosen.
-Goes through `Card:is_suit`, so Wild cards behave correctly.
+Also via `perma_bonus`, on top of the rank bonus: spades +3, hearts +2,
+clubs +1, diamonds +0. Goes through `Card:is_suit`, so Wild cards behave
+correctly.
+
+An ace of spades scores 18, a three of diamonds 3 — enough spread to steer
+play without swamping the rank bonuses.
+
+These bonuses affect **score only, never comparison**. Comparing by total chips
+was considered and rejected: the suit bonuses leak across ranks, so a pair of
+5s (15) ties a pair of 7s (15), and a pair of aces (31) beats a pair of 2s
+(29), both of which contradict Big 2. Rank decides who wins; chips decide what
+it scores.
 
 ### 5. `cm_wrap_straights` — 2AKQJ is a straight
 
@@ -99,14 +113,33 @@ Goes through `Card:is_suit`, so Wild cards behave correctly.
 it is one line. SMODS composes it with Four Fingers and Shortcut itself
 (`game_object.lua:2913`), so the interaction worry is already handled upstream.
 
+### 6. `cm_trick_refund` — hold the trick, keep the pass
+
+A successful continuation refunds one discard.
+
+This is the counterweight to how punishing the lock is. It cannot be exploited
+the way a *hand* refund could: a hand refund made chains self-financing, so
+rising singles became thirteen free High Card plays. Discards cannot be spent
+for score — only to pass or to feed a discard joker — so there is no path from
+refunds to points.
+
+It also reads right: keeping control of the trick means you never had to pass,
+so you get the pass back.
+
 ## The challenge
 
 - Hand size **13** (52 / 4 players), dealt per round
 - **4** hands, **4** discards to start — a guess, to be tuned by play
-- All five modifiers above
-- Discard-based jokers banned
+- All six modifiers above
+- **The Psychic banned** (`bl_psychic`, `debuff = {h_size_ge = 5}`): it requires
+  every played hand to contain 5 cards, so a 1-, 2- or 3-card lock would make
+  every legal continuation illegal and the round unwinnable. It runs through the
+  same `debuff_hand` seam this challenge uses.
 
 ## Decided and rejected
+
+**Failed hands cost a hand.** Same as playing an illegal hand into a boss that
+gates hand size. Costing nothing would make the lock toothless.
 
 **Bonus hand for continuing a trick — rejected.** Refunding the hand on a
 successful continuation would make the junk opener dominant rather than a
@@ -122,17 +155,26 @@ everything in Balatro's internals would fight `evaluate_poker_hand`, straight
 detection and every rank-reading joker. `cm_rank_chips` gets the same feeling
 through chips alone.
 
+## The rules, as a player reads them
+
+Each should fit on one line, like a joker:
+
+- Hands must match the last hand's size and beat its rank.
+- Same size and higher rank earns a discard.
+- Discard nothing to pass.
+
 ## Open questions
 
-1. **Suit chip amounts.** Large enough to steer play, small enough not to
-   swamp the rank bonuses.
-2. **Does a failed hand cost a hand or a discard?** Costing nothing makes the
-   lock toothless. A hand is harsher and closer to playing into a wall in Big 2.
-3. **Button label.** The pass button will still read "Discard", which makes the
-   mechanic hard to discover. Relabelling to "Pass" may be awkward in the UI
-   code; an `attention_text` popup is the fallback.
-4. **Starting hands and discards.** Passing is the only escape from a bad lock,
-   so 4/4 is a starting guess, not a considered number.
+1. **Button label.** The pass button will still read "Discard", which makes the
+   mechanic hard to discover. Relabelling to "Pass" when nothing is selected
+   may be awkward in the UI code; an `attention_text` popup is the fallback.
+2. **Starting hands and discards.** 4/4 is a starting guess, not a considered
+   number.
+3. **Do cards redraw after a discard?** Earlier drafts said no, on the theory
+   that a Big 2 hand is dealt once. With card discards now allowed, no-redraw
+   makes them permanently shrink the hand, which may be too steep a price for
+   joker synergies. Undecided: redrawing is the safer default and the simpler
+   rule, since it needs no new modifier at all.
 
 ## Note on verification
 
