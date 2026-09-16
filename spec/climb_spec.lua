@@ -250,9 +250,8 @@ end)
 describe("the lock", function()
   before_each(function()
     load_module()
-    -- any_hand_drawn is set once the round has dealt; a lock only applies
-    -- inside such a round.
-    G.GAME = { current_round = { any_hand_drawn = true }, modifiers = {} }
+    -- The lock is stamped with G.GAME.round, so the fixture needs one.
+    G.GAME = { round = 1, current_round = {}, modifiers = {} }
   end)
 
   it("records what was played", function()
@@ -267,11 +266,13 @@ describe("the lock", function()
   -- Same bug as the draw flag: current_round is mutated field by field
   -- between rounds, so a lock of our own survived and rejected the next
   -- round's opening hand.
-  it("expires when the round ends", function()
+  -- The bug this replaced: keying off any_hand_drawn did not work, because
+  -- new_round clears it and the deal sets it true again, so a lock from the
+  -- previous round looked current and rejected the first hand.
+  it("expires when the round number changes", function()
     Climb.set_lock(2, "Pair", hand(7, 7))
     assert.is_truthy(Climb.get_lock())
-    -- What the game does at the start of a round.
-    G.GAME.current_round.any_hand_drawn = nil
+    G.GAME.round = 2
     assert.is_nil(Climb.get_lock())
   end)
 

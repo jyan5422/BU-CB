@@ -162,10 +162,12 @@ function Climb.get_lock()
   local round = G.GAME and G.GAME.current_round
   local lock = round and round.cm_climb_state
   if not lock then return nil end
-  -- A lock only applies within the round that set it. any_hand_drawn is set
-  -- once the round has dealt and cleared when the next begins, so its absence
-  -- means this lock outlived its round.
-  if not round.any_hand_drawn then
+  -- Stamped with G.GAME.round, a monotonic counter the game bumps per round.
+  -- An earlier attempt keyed off any_hand_drawn, but new_round clears that and
+  -- the deal immediately sets it true again, so by the time a hand is played it
+  -- is indistinguishable from the previous round's -- the lock survived and
+  -- rejected the first hand of every new round.
+  if lock.round ~= (G.GAME and G.GAME.round) then
     round.cm_climb_state = nil
     return nil
   end
@@ -180,6 +182,7 @@ function Climb.set_lock(count, handname, cards)
     handname = handname,
     rank = rank,
     suit = suit,
+    round = G.GAME.round,
   }
 end
 

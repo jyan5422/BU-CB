@@ -42,10 +42,15 @@ function Blind:debuff_hand(cards, hand, handname, check)
 
       if not beats then
         if check then
-          -- The check pass drives the "will not score" label, which says only
-          -- that -- not why. Stash the reason so the label can carry it, since
-          -- the Big 2 order is the surprising part (a 2 outranks a 5).
-          ChallengeMod.Climb.last_reason = why
+          -- The check pass drives the game's "will not score" label, which says
+          -- only that, not why. Surfacing the reason there would mean patching
+          -- that label's construction, which I could not locate; instead the
+          -- reason is shown as an alert the moment the selection becomes
+          -- illegal, so it appears before the hand is committed.
+          if ChallengeMod.Climb.last_reason ~= why then
+            ChallengeMod.Climb.last_reason = why
+            alert(why)
+          end
         else
           -- Failing clears the trick, so the next hand leads freely. Without
           -- that a bad play would leave the same unbeatable lock in place.
