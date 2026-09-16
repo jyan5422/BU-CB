@@ -1,0 +1,17 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+# The card tooltip reads self.base.nominal directly rather than going through
+# Card:get_chip_bonus, so cm_rank_chips and cm_suit_chips were invisible there:
+# a 2 of spades scores 17 but the tooltip said "+2 chips". Scoring was always
+# correct -- this is display only.
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "nominal_chips = self.base.nominal ~= 0 and self.base.nominal or nil,"
+position = "at"
+payload = "nominal_chips = self.base.nominal ~= 0 and (self.base.nominal + ((ChallengeMod and ChallengeMod.Chips and ChallengeMod.Chips.bonus(self)) or 0)) or nil,"
+match_indent = true
+overwrite = true
