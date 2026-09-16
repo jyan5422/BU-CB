@@ -40,6 +40,17 @@ would read as broken.
 **Rank order** (low to high): `3 4 5 6 7 8 9 10 J Q K A 2`. The 2 is highest,
 as in Big 2; the Ace sits above the King.
 
+**Suit order** (low to high): diamonds, clubs, hearts, spades. Big 2 has no
+ties -- every card in the deck is distinct -- so suit always breaks an equal
+rank, and a pair of 7s *does* beat another pair of 7s when its deciding card
+has the higher suit.
+
+**The deciding card is the hand's defining group, not its highest card.** A
+full house 3-3-3-9-9 is a "three", because the triple carries it; four of a
+kind 5-5-5-5-K is a "five", the king being only a kicker. So the largest group
+wins, ties between equal-sized groups fall back to rank, and suit breaks what
+remains.
+
 Comparison reads `card.base.id`, the printed rank, which enhancements,
 editions, seals and our own chip bonuses never touch — so a steel 5 still
 compares as a 5, and scoring changes can never skew a comparison. Rankless

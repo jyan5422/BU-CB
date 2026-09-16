@@ -29,8 +29,10 @@ local function load_module()
 end
 
 -- base.id is the printed rank: 2..10 as themselves, J=11, Q=12, K=13, A=14.
-local function card(id)
-  return { base = { id = id } }
+-- Suits default to Diamonds, the lowest, so tests that do not care about suit
+-- cannot accidentally win on one.
+local function card(id, suit)
+  return { base = { id = id, suit = suit or "Diamonds" } }
 end
 local function hand(...)
   local t = {}
@@ -70,23 +72,63 @@ describe("Big 2 rank order", function()
   end)
 end)
 
+describe("Big 2 suit order", function()
+  before_each(load_module)
+
+  it("orders diamonds lowest and spades highest", function()
+    assert.is_true(Trick.suit_of(card(5, "Spades")) > Trick.suit_of(card(5, "Hearts")))
+    assert.is_true(Trick.suit_of(card(5, "Hearts")) > Trick.suit_of(card(5, "Clubs")))
+    assert.is_true(Trick.suit_of(card(5, "Clubs")) > Trick.suit_of(card(5, "Diamonds")))
+  end)
+
+  it("is nil for a card with no suit", function()
+    assert.is_nil(Trick.suit_of({ base = { id = 5 } }))
+    assert.is_nil(Trick.suit_of(nil))
+  end)
+end)
+
 describe("hand rank", function()
   before_each(load_module)
   it("takes the highest card in the hand", function()
-    assert.equal(Trick.rank_of(card(2)), Trick.hand_rank(hand(5, 7, 2, 3)))
-    assert.equal(Trick.rank_of(card(14)), Trick.hand_rank(hand(14, 13, 3)))
+    assert.equal(Trick.rank_of(card(2)), (Trick.hand_rank(hand(5, 7, 2, 3))))
+    assert.equal(Trick.rank_of(card(14)), (Trick.hand_rank(hand(14, 13, 3))))
+  end)
+
+  -- Big 2 decides a hand by its defining group, not its top card.
+  it("decides a full house by its triple, not its top card", function()
+    -- 3-3-3-9-9: the triple of 3s carries it, so it is a "three".
+    local rank = Trick.hand_rank({ card(3), card(3), card(3), card(9), card(9) })
+    assert.equal(Trick.rank_of(card(3)), rank)
+  end)
+
+  it("decides four of a kind by its quad, not its kicker", function()
+    -- 5-5-5-5-K: the king is only a kicker.
+    local rank = Trick.hand_rank({ card(5), card(5), card(5), card(5), card(13) })
+    assert.equal(Trick.rank_of(card(5)), rank)
+  end)
+
+  it("decides a pair by the pair, not the odd card", function()
+    local rank = Trick.hand_rank({ card(4), card(4), card(14) })
+    assert.equal(Trick.rank_of(card(4)), rank)
+  end)
+
+  -- The deciding card is the highest rank, and among equals the highest suit.
+  it("picks the highest suit among equal top ranks", function()
+    local rank, suit = Trick.hand_rank({ card(9, "Clubs"), card(9, "Spades"), card(3) })
+    assert.equal(Trick.rank_of(card(9)), rank)
+    assert.equal(Trick.suit_of(card(9, "Spades")), suit)
   end)
 
   it("ignores rankless cards among ranked ones", function()
     local h = hand(7)
     h[#h + 1] = { base = {} }
-    assert.equal(Trick.rank_of(card(7)), Trick.hand_rank(h))
+    assert.equal(Trick.rank_of(card(7)), (Trick.hand_rank(h)))
   end)
 
   it("is nil for an all-rankless hand", function()
-    assert.is_nil(Trick.hand_rank({ { base = {} }, { base = {} } }))
-    assert.is_nil(Trick.hand_rank({}))
-    assert.is_nil(Trick.hand_rank(nil))
+    assert.is_nil((Trick.hand_rank({ { base = {} }, { base = {} } })))
+    assert.is_nil((Trick.hand_rank({})))
+    assert.is_nil((Trick.hand_rank(nil)))
   end)
 end)
 
@@ -130,9 +172,18 @@ describe("beating the trick", function()
     assert.is_false(Trick.beats(lock, 2, "Pair", hand(4, 4)))
   end)
 
-  it("treats an equal rank as not beating it", function()
-    local lock = { count = 2, handname = "Pair", rank = Trick.rank_of(card(7)) }
-    assert.is_false(Trick.beats(lock, 2, "Pair", hand(7, 7)))
+  -- Big 2 has no ties: every card is distinct, so suit always decides.
+  it("breaks an equal rank by suit", function()
+    local lock = { count = 2, handname = "Pair", rank = Trick.rank_of(card(7)), suit = Trick.suit_of(card(7, "Clubs")) }
+    -- Spade 7 beats club 7.
+    assert.is_true(Trick.beats(lock, 2, "Pair", { card(7, "Spades"), card(7, "Diamonds") }))
+    -- Diamond 7 does not beat club 7.
+    assert.is_false(Trick.beats(lock, 2, "Pair", { card(7, "Diamonds"), card(7, "Diamonds") }))
+  end)
+
+  it("cannot be beaten by an identical hand", function()
+    local lock = { count = 2, handname = "Pair", rank = Trick.rank_of(card(7)), suit = Trick.suit_of(card(7, "Spades")) }
+    assert.is_false(Trick.beats(lock, 2, "Pair", { card(7, "Spades"), card(7, "Hearts") }))
   end)
 
   it("lets a pair of 2s beat a pair of aces", function()
@@ -146,6 +197,34 @@ describe("beating the trick", function()
     local lock = { count = 5, handname = "Straight", rank = Trick.rank_of(card(9)) }
     assert.is_true(Trick.beats(lock, 5, "Flush", hand(3, 4, 5, 6, 8)))
     assert.is_false(Trick.beats(lock, 5, "High Card", hand(14, 13, 12, 10, 8)))
+  end)
+
+  -- Two full houses: the triples decide, so a triple of 4s beats a triple of
+  -- 3s even though the loser holds a higher pair.
+  it("compares full houses by their triples", function()
+    local lock = {
+      count = 5,
+      handname = "Full House",
+      rank = Trick.rank_of(card(4)),
+      suit = Trick.suit_of(card(4)),
+    }
+    -- Triple 5s over pair 3s beats triple 4s.
+    assert.is_true(Trick.beats(lock, 5, "Full House",
+      { card(5), card(5), card(5), card(3), card(3) }))
+    -- Triple 3s with a pair of kings does not, despite the kings.
+    assert.is_false(Trick.beats(lock, 5, "Full House",
+      { card(3), card(3), card(3), card(13), card(13) }))
+  end)
+
+  it("breaks a five-card tier tie by rank then suit", function()
+    local lock = {
+      count = 5,
+      handname = "Flush",
+      rank = Trick.rank_of(card(9)),
+      suit = Trick.suit_of(card(9, "Clubs")),
+    }
+    assert.is_true(Trick.beats(lock, 5, "Flush", { card(9, "Spades"), card(8), card(7), card(5), card(3) }))
+    assert.is_false(Trick.beats(lock, 5, "Flush", { card(9, "Diamonds"), card(8), card(7), card(5), card(3) }))
   end)
 
   it("falls back to rank when the tiers match", function()
@@ -180,6 +259,7 @@ describe("the lock", function()
     assert.equal(2, lock.count)
     assert.equal("Pair", lock.handname)
     assert.equal(Trick.rank_of(card(7)), lock.rank)
+    assert.equal(Trick.suit_of(card(7)), lock.suit)
   end)
 
   it("clears on demand", function()

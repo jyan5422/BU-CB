@@ -28,6 +28,21 @@ local RANK_ORDER = {
   [2] = 13, -- the Big Two
 }
 
+-- Big 2 suit order, low to high: diamonds, clubs, hearts, spades. Big 2 has no
+-- ties -- every card is distinct -- so suit always breaks an equal rank.
+local SUIT_ORDER = {
+  Diamonds = 1,
+  Clubs = 2,
+  Hearts = 3,
+  Spades = 4,
+}
+
+--- Big 2 suit weight of one card, or nil if it has no suit.
+function Trick.suit_of(card)
+  local suit = card and card.base and card.base.suit
+  return suit and SUIT_ORDER[suit] or nil
+end
+
 --- Big 2 rank of one card, or nil if it has no printed rank.
 -- Rankless cards (Stone) must never win a comparison: Card:get_id() returns a
 -- large random negative for them, which would otherwise compare as garbage.
@@ -36,14 +51,44 @@ function Trick.rank_of(card)
   return id and RANK_ORDER[id] or nil
 end
 
---- Highest Big 2 rank in a hand; nil if nothing in it has a rank.
+--- The deciding card of a hand: highest rank, and among equals the highest
+-- suit. Returned as a sortable pair so callers never compare rank alone.
+--
+-- Big 2 decides a hand by its defining GROUP, not its highest card: a full
+-- house 3-3-3-9-9 is a "three" because the triple carries it, and four of a
+-- kind 5-5-5-5-K is a "five", the king being only a kicker. Taking the top
+-- card would rank both by the wrong card, so the largest group wins and ties
+-- between equal-sized groups fall back to rank.
+-- @return number|nil rank, number|nil suit
 function Trick.hand_rank(cards)
-  local best
+  local counts, suits = {}, {}
   for _, card in ipairs(cards or {}) do
     local r = Trick.rank_of(card)
-    if r and (not best or r > best) then best = r end
+    if r then
+      counts[r] = (counts[r] or 0) + 1
+      local sv = Trick.suit_of(card) or 0
+      if not suits[r] or sv > suits[r] then suits[r] = sv end
+    end
   end
-  return best
+
+  local best_rank, best_count
+  for rank, count in pairs(counts) do
+    if not best_rank
+      or count > best_count
+      or (count == best_count and rank > best_rank)
+    then
+      best_rank, best_count = rank, count
+    end
+  end
+
+  if not best_rank then return nil end
+  return best_rank, suits[best_rank]
+end
+
+--- Is (rank_a, suit_a) strictly above (rank_b, suit_b)?
+local function above(rank_a, suit_a, rank_b, suit_b)
+  if rank_a ~= rank_b then return rank_a > rank_b end
+  return (suit_a or 0) > (suit_b or 0)
 end
 
 --- Hand strength, bigger is stronger.
@@ -85,10 +130,13 @@ function Trick.beats(lock, count, handname, cards)
     -- Same hand type: rank splits the tie, as it does in Big 2.
   end
 
-  local rank, lock_rank = Trick.hand_rank(cards), lock.rank
+  -- Big 2 has no ties: an equal rank is split by the suit of the deciding
+  -- card, so a pair of 7s does beat another pair of 7s if its high card's
+  -- suit is higher.
+  local rank, suit = Trick.hand_rank(cards)
   if not rank then return false, "no rank to compare" end
-  if not lock_rank then return true, "beats" end
-  if rank > lock_rank then return true, "beats" end
+  if not lock.rank then return true, "beats" end
+  if above(rank, suit, lock.rank, lock.suit) then return true, "beats" end
   return false, "too low"
 end
 
@@ -100,10 +148,12 @@ end
 
 function Trick.set_lock(count, handname, cards)
   if not (G.GAME and G.GAME.current_round) then return end
+  local rank, suit = Trick.hand_rank(cards)
   G.GAME.current_round.cm_trick = {
     count = count,
     handname = handname,
-    rank = Trick.hand_rank(cards),
+    rank = rank,
+    suit = suit,
   }
 end
 
