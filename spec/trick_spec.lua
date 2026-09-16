@@ -250,7 +250,9 @@ end)
 describe("the lock", function()
   before_each(function()
     load_module()
-    G.GAME = { current_round = {}, modifiers = {} }
+    -- any_hand_drawn is set once the round has dealt; a lock only applies
+    -- inside such a round.
+    G.GAME = { current_round = { any_hand_drawn = true }, modifiers = {} }
   end)
 
   it("records what was played", function()
@@ -260,6 +262,17 @@ describe("the lock", function()
     assert.equal("Pair", lock.handname)
     assert.equal(Trick.rank_of(card(7)), lock.rank)
     assert.equal(Trick.suit_of(card(7)), lock.suit)
+  end)
+
+  -- Same bug as the draw flag: current_round is mutated field by field
+  -- between rounds, so a lock of our own survived and rejected the next
+  -- round's opening hand.
+  it("expires when the round ends", function()
+    Trick.set_lock(2, "Pair", hand(7, 7))
+    assert.is_truthy(Trick.get_lock())
+    -- What the game does at the start of a round.
+    G.GAME.current_round.any_hand_drawn = nil
+    assert.is_nil(Trick.get_lock())
   end)
 
   it("clears on demand", function()
@@ -467,5 +480,54 @@ describe("no redraw", function()
     -- What the game actually does at the start of a round.
     G.GAME.current_round.any_hand_drawn = nil
     assert.is_true(Draw.allow())
+  end)
+end)
+
+describe("Big 2 sort order", function()
+  local nominal
+
+  before_each(function()
+    _G.ChallengeMod = {}
+    _G.G = { handlist = HANDLIST, GAME = { modifiers = {} } }
+    -- Vanilla nominal plus face_nominal, which is how J/Q/K separate.
+    local VANILLA = {
+      [5] = 5, [10] = 10, [11] = 10, [12] = 10, [13] = 10, [14] = 11, [2] = 2,
+    }
+    _G.Card = {
+      get_nominal = function(self, mod)
+        local n = VANILLA[self.base.id] or 0
+        if mod == "suit" then return n * 10000 end
+        return n
+      end,
+    }
+    assert(loadfile("smods/rules_sort.lua"))()
+    nominal = function(id, mod)
+      return _G.Card.get_nominal({ base = { id = id } }, mod)
+    end
+  end)
+
+  it("leaves the order alone when off", function()
+    assert.equal(2, nominal(2))
+  end)
+
+  -- The mistake this fixes: a 2 sitting next to the 3s, so it reads as the
+  -- weakest card when it is the strongest.
+  it("sorts the 2 above the ace", function()
+    G.GAME.modifiers.cm_rank_chips = true
+    assert.is_true(nominal(2) > nominal(14))
+  end)
+
+  it("moves only the 2", function()
+    G.GAME.modifiers.cm_rank_chips = true
+    for _, id in ipairs({ 5, 10, 11, 12, 13, 14 }) do
+      assert.equal(nominal(id), _G.Card.get_nominal({ base = { id = id } }),
+        "rank " .. id .. " should be untouched")
+    end
+  end)
+
+  -- Suit sorting multiplies rank by 10000, so the shift has to scale with it.
+  it("keeps suit sorting consistent", function()
+    G.GAME.modifiers.cm_rank_chips = true
+    assert.is_true(nominal(2, "suit") > nominal(14, "suit"))
   end)
 end)

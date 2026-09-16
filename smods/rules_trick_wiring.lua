@@ -41,7 +41,12 @@ function Blind:debuff_hand(cards, hand, handname, check)
       local beats, why = Trick.beats(lock, count, handname, played)
 
       if not beats then
-        if not check then
+        if check then
+          -- The check pass drives the "will not score" label, which says only
+          -- that -- not why. Stash the reason so the label can carry it, since
+          -- the Big 2 order is the surprising part (a 2 outranks a 5).
+          ChallengeMod.Trick.last_reason = why
+        else
           -- Failing clears the trick, so the next hand leads freely. Without
           -- that a bad play would leave the same unbeatable lock in place.
           Trick.clear_lock()
@@ -49,6 +54,8 @@ function Blind:debuff_hand(cards, hand, handname, check)
         end
         return true
       end
+
+      if check then ChallengeMod.Trick.last_reason = nil end
 
       if not check then
         local continued = lock ~= nil
@@ -69,26 +76,28 @@ function Blind:debuff_hand(cards, hand, handname, check)
   return debuff_hand_ref(self, cards, hand, handname, check)
 end
 
--- A discard with nothing selected is the pass: it clears the trick. Discarding
--- cards does not, or discarding would be strictly better than passing and the
--- pass would have no reason to exist.
+-- Any discard is a pass: it clears the trick, whether or not cards were
+-- selected. Giving up the trick is the cost of discarding at all, which keeps
+-- the two decisions -- improve my hand, or keep the trick -- in tension
+-- without making a zero-card discard a separate special case.
 local discard_ref = G.FUNCS.discard_cards_from_highlighted
 G.FUNCS.discard_cards_from_highlighted = function(e, hook)
   local passing = Trick.active()
     and G.GAME.modifiers.cm_pass
     and G.hand
-    and #G.hand.highlighted == 0
 
+  local zero_card = passing and #G.hand.highlighted == 0
   local ret = discard_ref and discard_ref(e, hook)
 
   if passing then
-    -- The game's discard body is wrapped in `if highlighted_count > 0`, so
-    -- with nothing selected it never reaches ease_discard(-1) and the pass
-    -- would be free. Charge it here, and move the round on: the same guard
-    -- skips the DRAW_TO_HAND transition too.
-    if ease_discard then ease_discard(-1) end
-    if G.GAME.current_round then
-      G.GAME.current_round.discards_used = (G.GAME.current_round.discards_used or 0) + 1
+    -- With cards selected the game charges the discard itself. With none, its
+    -- whole body is skipped by `if highlighted_count > 0`, so the charge has
+    -- to happen here or a zero-card pass would be free.
+    if zero_card and ease_discard then
+      ease_discard(-1)
+      if G.GAME.current_round then
+        G.GAME.current_round.discards_used = (G.GAME.current_round.discards_used or 0) + 1
+      end
     end
     Trick.clear_lock()
     alert("pass")
@@ -112,19 +121,24 @@ local mod_mult_ref = mod_mult
 function mod_mult(_mult)
   _mult = mod_mult_ref(_mult)
 
-  -- UNVERIFIED: this assumes the played cards have already left G.hand by the
-  -- time mult is computed, so #G.hand.cards is the remainder. That ordering
-  -- could not be confirmed from the game source and needs checking on device;
-  -- if it is wrong the bonus either never fires or fires on every hand.
+  -- mod_mult is called several times while scoring one hand -- for the base
+  -- mult, again after jokers, and once more at the final step -- so the bonus
+  -- has to be applied once per hand rather than per call, or it compounds.
+  -- G.GAME.current_round.hands_played identifies the hand.
   if G.GAME and G.GAME.modifiers and G.GAME.modifiers.cm_shed_bonus
     and G.hand and G.play
     and #G.hand.cards == 0 and #G.play.cards > 0
   then
-    local handname = G.GAME.last_hand_played
-    local x = handname and ChallengeMod.Trick.shed_xmult(handname)
-    if x then
-      _mult = _mult * x
-      alert(("shed x%s"):format(tostring(x)))
+    local round = G.GAME.current_round
+    local this_hand = round and round.hands_played
+    if ChallengeMod.Trick.shed_applied ~= this_hand then
+      local handname = G.GAME.last_hand_played
+      local x = handname and ChallengeMod.Trick.shed_xmult(handname)
+      if x then
+        ChallengeMod.Trick.shed_applied = this_hand
+        _mult = _mult * x
+        alert(("shed X%s"):format(tostring(x)))
+      end
     end
   end
 

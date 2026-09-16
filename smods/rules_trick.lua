@@ -37,6 +37,17 @@ local SUIT_ORDER = {
   Spades = 4,
 }
 
+-- For the player-facing reason: which printed rank a Big 2 weight came from.
+local RANK_LABEL = {
+  [1] = "3", [2] = "4", [3] = "5", [4] = "6", [5] = "7", [6] = "8",
+  [7] = "9", [8] = "10", [9] = "J", [10] = "Q", [11] = "K", [12] = "A",
+  [13] = "2",
+}
+
+function Trick.rank_name(weight)
+  return weight and RANK_LABEL[weight] or nil
+end
+
 --- Big 2 suit weight of one card, or nil if it has no suit.
 function Trick.suit_of(card)
   local suit = card and card.base and card.base.suit
@@ -119,14 +130,14 @@ function Trick.beats(lock, count, handname, cards)
   if not lock then return true, "lead" end
 
   if count ~= lock.count then
-    return false, ("needs %d card%s"):format(lock.count, lock.count == 1 and "" or "s")
+    return false, ("play %d card%s"):format(lock.count, lock.count == 1 and "" or "s")
   end
 
   if ranked_by_tier(count) then
     local tier, lock_tier = Trick.hand_tier(handname), Trick.hand_tier(lock.handname)
     if not tier or not lock_tier then return false, "unknown hand" end
     if tier > lock_tier then return true, "beats" end
-    if tier < lock_tier then return false, ("needs to beat %s"):format(tostring(lock.handname)) end
+    if tier < lock_tier then return false, ("beat %s"):format(tostring(lock.handname)) end
     -- Same hand type: rank splits the tie, as it does in Big 2.
   end
 
@@ -137,13 +148,28 @@ function Trick.beats(lock, count, handname, cards)
   if not rank then return false, "no rank to compare" end
   if not lock.rank then return true, "beats" end
   if above(rank, suit, lock.rank, lock.suit) then return true, "beats" end
-  return false, "too low"
+  -- Name the card to beat: "too low" leaves the player guessing, and the Big 2
+  -- order is the part that surprises people (a 2 outranks everything).
+  return false, ("beat %s"):format(Trick.rank_name(lock.rank) or "the last hand")
 end
 
--- The lock lives on G.GAME.current_round, which the game already clears at the
--- start of each round, so it resets per blind with no work from us.
+-- The lock lives on G.GAME.current_round, but the game does NOT replace that
+-- table between rounds -- it mutates named fields, so a key of our own would
+-- survive and block the next round's opening hand. It is therefore stamped
+-- with any_hand_drawn, one of the fields the game does clear: a lock recorded
+-- while that was set is stale once it goes missing.
 function Trick.get_lock()
-  return G.GAME and G.GAME.current_round and G.GAME.current_round.cm_trick
+  local round = G.GAME and G.GAME.current_round
+  local lock = round and round.cm_trick
+  if not lock then return nil end
+  -- A lock only applies within the round that set it. any_hand_drawn is set
+  -- once the round has dealt and cleared when the next begins, so its absence
+  -- means this lock outlived its round.
+  if not round.any_hand_drawn then
+    round.cm_trick = nil
+    return nil
+  end
+  return lock
 end
 
 function Trick.set_lock(count, handname, cards)

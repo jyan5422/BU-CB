@@ -36,6 +36,7 @@ load_file("smods/rules_trick.lua")
 load_file("smods/rules_chips.lua")
 load_file("smods/rules_straights.lua")
 load_file("smods/rules_draw.lua")
+load_file("smods/rules_sort.lua")
 load_file("smods/rules_trick_wiring.lua")
 
 ChallengeMod.localizeChalNames()

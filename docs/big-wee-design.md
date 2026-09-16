@@ -76,9 +76,11 @@ discard.
 The pass is the escape valve: without it you could hold 13 cards that cannot
 make the locked shape and cannot afford to discard into a worse position.
 
-**Discarding cards does not clear the lock** — only a pure pass does.
-Otherwise discarding would be strictly better than passing and the pass would
-have no reason to exist.
+**Any discard clears the lock**, whether or not cards were selected. Giving up
+the trick is the cost of discarding at all, which keeps improving your hand and
+keeping the trick in tension without making a zero-card discard a special case.
+An earlier draft cleared only on a pure pass; that made discarding strictly
+better than passing.
 
 Earlier drafts made discard *pass-only*, banning card discards outright. That
 was rejected: discards feeding jokers and money is core Balatro (Faint, Ramen,
