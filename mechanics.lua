@@ -11,9 +11,9 @@ function ChallengeMod.localizeMechDescriptions()
   G.localization.misc.v_text.ch_c_cm_decreasing_handsize = { "Hand size {C:attention}Decreases{} each Ante" }
   G.localization.misc.v_text.ch_c_cm_random_deck = { "Your deck is {C:attention}randomized{}" }
   G.localization.misc.v_text.ch_c_cm_mult_dollar_cap = { "{C:blue}Mult{} cannot exceed the current {C:money}$" }
-  G.localization.misc.v_text.ch_c_cm_trick_lock = { "Play the same {C:attention}size{}, higher {C:attention}rank{}" }
+  G.localization.misc.v_text.ch_c_cm_climb = { "Play the same {C:attention}size{}, higher {C:attention}rank{}" }
   G.localization.misc.v_text.ch_c_cm_pass = { "Discard nothing to {C:attention}pass{}" }
-  G.localization.misc.v_text.ch_c_cm_trick_refund = { "Beat it, get a {C:red}discard{} back" }
+  G.localization.misc.v_text.ch_c_cm_climb_refund = { "Beat it, get a {C:red}discard{} back" }
   G.localization.misc.v_text.ch_c_cm_shed_bonus = { "Empty your hand for up to {X:mult,C:white}X6.5{}" }
   G.localization.misc.v_text.ch_c_cm_rank_chips = { "{C:attention}2{} is the highest card" }
   G.localization.misc.v_text.ch_c_cm_suit_chips = { "{C:attention}Spades{} > hearts > clubs > diamonds" }
@@ -61,12 +61,12 @@ function ChallengeMod.evaluate_rules(self, v)
     self.GAME.modifiers.cm_auto_pack = true
   elseif v.id == 'cm_mult_dollar_cap' then
     self.GAME.modifiers.cm_mult_dollar_cap = true
-  elseif v.id == 'cm_trick_lock' then
-    self.GAME.modifiers.cm_trick_lock = true
+  elseif v.id == 'cm_climb' then
+    self.GAME.modifiers.cm_climb = true
   elseif v.id == 'cm_pass' then
     self.GAME.modifiers.cm_pass = true
-  elseif v.id == 'cm_trick_refund' then
-    self.GAME.modifiers.cm_trick_refund = true
+  elseif v.id == 'cm_climb_refund' then
+    self.GAME.modifiers.cm_climb_refund = true
   elseif v.id == 'cm_shed_bonus' then
     self.GAME.modifiers.cm_shed_bonus = true
   elseif v.id == 'cm_rank_chips' then

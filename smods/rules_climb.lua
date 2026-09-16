@@ -1,12 +1,12 @@
--- cm_trick_lock: the Big 2 trick rule.
+-- cm_climb: the Big 2 trick rule.
 --
 -- The first hand played in a round fixes the trick's shape; every later hand
 -- that round must match it and beat it. See docs/big-wee-design.md.
 --
 -- Exposed on ChallengeMod so a joker, daily or another challenge can reuse the
 -- comparison without taking the rest of the Big Wee rule set.
-ChallengeMod.Trick = ChallengeMod.Trick or {}
-local Trick = ChallengeMod.Trick
+ChallengeMod.Climb = ChallengeMod.Climb or {}
+local Climb = ChallengeMod.Climb
 
 -- Big 2 rank order, low to high: 3..10, J, Q, K, A, 2. Keyed by base.id, the
 -- printed rank, which enhancements, editions and our own chip bonuses never
@@ -44,12 +44,12 @@ local RANK_LABEL = {
   [13] = "2",
 }
 
-function Trick.rank_name(weight)
+function Climb.rank_name(weight)
   return weight and RANK_LABEL[weight] or nil
 end
 
 --- Big 2 suit weight of one card, or nil if it has no suit.
-function Trick.suit_of(card)
+function Climb.suit_of(card)
   local suit = card and card.base and card.base.suit
   return suit and SUIT_ORDER[suit] or nil
 end
@@ -57,7 +57,7 @@ end
 --- Big 2 rank of one card, or nil if it has no printed rank.
 -- Rankless cards (Stone) must never win a comparison: Card:get_id() returns a
 -- large random negative for them, which would otherwise compare as garbage.
-function Trick.rank_of(card)
+function Climb.rank_of(card)
   local id = card and card.base and card.base.id
   return id and RANK_ORDER[id] or nil
 end
@@ -71,13 +71,13 @@ end
 -- card would rank both by the wrong card, so the largest group wins and ties
 -- between equal-sized groups fall back to rank.
 -- @return number|nil rank, number|nil suit
-function Trick.hand_rank(cards)
+function Climb.hand_rank(cards)
   local counts, suits = {}, {}
   for _, card in ipairs(cards or {}) do
-    local r = Trick.rank_of(card)
+    local r = Climb.rank_of(card)
     if r then
       counts[r] = (counts[r] or 0) + 1
-      local sv = Trick.suit_of(card) or 0
+      local sv = Climb.suit_of(card) or 0
       if not suits[r] or sv > suits[r] then suits[r] = sv end
     end
   end
@@ -105,7 +105,7 @@ end
 --- Hand strength, bigger is stronger.
 -- G.handlist is ordered strongest first, so the index is inverted to keep the
 -- same "bigger wins" direction as the rank comparison.
-function Trick.hand_tier(handname)
+function Climb.hand_tier(handname)
   if not (handname and G.handlist) then return nil end
   for i, name in ipairs(G.handlist) do
     if name == handname then return #G.handlist - i + 1 end
@@ -126,7 +126,7 @@ end
 -- @param handname string Balatro's name for the played hand
 -- @param cards table     the played cards
 -- @return boolean, string  whether it beats, and why (for the player alert)
-function Trick.beats(lock, count, handname, cards)
+function Climb.beats(lock, count, handname, cards)
   if not lock then return true, "lead" end
 
   if count ~= lock.count then
@@ -134,7 +134,7 @@ function Trick.beats(lock, count, handname, cards)
   end
 
   if ranked_by_tier(count) then
-    local tier, lock_tier = Trick.hand_tier(handname), Trick.hand_tier(lock.handname)
+    local tier, lock_tier = Climb.hand_tier(handname), Climb.hand_tier(lock.handname)
     if not tier or not lock_tier then return false, "unknown hand" end
     if tier > lock_tier then return true, "beats" end
     if tier < lock_tier then return false, ("beat %s"):format(tostring(lock.handname)) end
@@ -144,13 +144,13 @@ function Trick.beats(lock, count, handname, cards)
   -- Big 2 has no ties: an equal rank is split by the suit of the deciding
   -- card, so a pair of 7s does beat another pair of 7s if its high card's
   -- suit is higher.
-  local rank, suit = Trick.hand_rank(cards)
+  local rank, suit = Climb.hand_rank(cards)
   if not rank then return false, "no rank to compare" end
   if not lock.rank then return true, "beats" end
   if above(rank, suit, lock.rank, lock.suit) then return true, "beats" end
   -- Name the card to beat: "too low" leaves the player guessing, and the Big 2
   -- order is the part that surprises people (a 2 outranks everything).
-  return false, ("beat %s"):format(Trick.rank_name(lock.rank) or "the last hand")
+  return false, ("beat %s"):format(Climb.rank_name(lock.rank) or "the last hand")
 end
 
 -- The lock lives on G.GAME.current_round, but the game does NOT replace that
@@ -158,24 +158,24 @@ end
 -- survive and block the next round's opening hand. It is therefore stamped
 -- with any_hand_drawn, one of the fields the game does clear: a lock recorded
 -- while that was set is stale once it goes missing.
-function Trick.get_lock()
+function Climb.get_lock()
   local round = G.GAME and G.GAME.current_round
-  local lock = round and round.cm_trick
+  local lock = round and round.cm_climb_state
   if not lock then return nil end
   -- A lock only applies within the round that set it. any_hand_drawn is set
   -- once the round has dealt and cleared when the next begins, so its absence
   -- means this lock outlived its round.
   if not round.any_hand_drawn then
-    round.cm_trick = nil
+    round.cm_climb_state = nil
     return nil
   end
   return lock
 end
 
-function Trick.set_lock(count, handname, cards)
+function Climb.set_lock(count, handname, cards)
   if not (G.GAME and G.GAME.current_round) then return end
-  local rank, suit = Trick.hand_rank(cards)
-  G.GAME.current_round.cm_trick = {
+  local rank, suit = Climb.hand_rank(cards)
+  G.GAME.current_round.cm_climb_state = {
     count = count,
     handname = handname,
     rank = rank,
@@ -183,21 +183,21 @@ function Trick.set_lock(count, handname, cards)
   }
 end
 
-function Trick.clear_lock()
+function Climb.clear_lock()
   if G.GAME and G.GAME.current_round then
-    G.GAME.current_round.cm_trick = nil
+    G.GAME.current_round.cm_climb_state = nil
   end
 end
 
-function Trick.active()
-  return G.GAME and G.GAME.modifiers and G.GAME.modifiers.cm_trick_lock == true
+function Climb.active()
+  return G.GAME and G.GAME.modifiers and G.GAME.modifiers.cm_climb == true
 end
 
 --- Xmult for going out on `handname`; nil when there is no bonus.
 -- 1 + (tier-1) * 0.5 puts High Card on exactly 1x, so dumping junk to get out
 -- pays nothing while a hand held back deliberately pays properly.
-function Trick.shed_xmult(handname)
-  local tier = Trick.hand_tier(handname)
+function Climb.shed_xmult(handname)
+  local tier = Climb.hand_tier(handname)
   if not tier then return nil end
   local x = 1 + (tier - 1) * 0.5
   if x <= 1 then return nil end

@@ -1,6 +1,6 @@
--- Wires cm_trick_lock, cm_pass, cm_trick_refund and cm_shed_bonus into the
--- game. The comparison itself lives in smods/rules_trick.lua.
-local Trick = ChallengeMod.Trick
+-- Wires cm_climb, cm_pass, cm_climb_refund and cm_shed_bonus into the
+-- game. The comparison itself lives in smods/rules_climb.lua.
+local Climb = ChallengeMod.Climb
 
 local function alert(text)
   if not (G.E_MANAGER and attention_text) then return end
@@ -32,39 +32,39 @@ end
 -- check -- only the real call updates the lock.
 local debuff_hand_ref = Blind.debuff_hand
 function Blind:debuff_hand(cards, hand, handname, check)
-  if Trick.active() then
+  if Climb.active() then
     local played = check and G.hand and G.hand.highlighted or cards
     local count = #(played or {})
 
     if count > 0 then
-      local lock = Trick.get_lock()
-      local beats, why = Trick.beats(lock, count, handname, played)
+      local lock = Climb.get_lock()
+      local beats, why = Climb.beats(lock, count, handname, played)
 
       if not beats then
         if check then
           -- The check pass drives the "will not score" label, which says only
           -- that -- not why. Stash the reason so the label can carry it, since
           -- the Big 2 order is the surprising part (a 2 outranks a 5).
-          ChallengeMod.Trick.last_reason = why
+          ChallengeMod.Climb.last_reason = why
         else
           -- Failing clears the trick, so the next hand leads freely. Without
           -- that a bad play would leave the same unbeatable lock in place.
-          Trick.clear_lock()
+          Climb.clear_lock()
           alert(why or "does not beat it")
         end
         return true
       end
 
-      if check then ChallengeMod.Trick.last_reason = nil end
+      if check then ChallengeMod.Climb.last_reason = nil end
 
       if not check then
         local continued = lock ~= nil
-        Trick.set_lock(count, handname, played)
+        Climb.set_lock(count, handname, played)
         -- Holding the trick means you never had to pass, so the pass comes
         -- back. Discards buy passes and joker triggers, never score, so this
         -- cannot be turned into points the way a refunded hand could.
         if continued
-          and G.GAME.modifiers.cm_trick_refund
+          and G.GAME.modifiers.cm_climb_refund
           and ease_discard
         then
           ease_discard(1)
@@ -82,7 +82,7 @@ end
 -- without making a zero-card discard a separate special case.
 local discard_ref = G.FUNCS.discard_cards_from_highlighted
 G.FUNCS.discard_cards_from_highlighted = function(e, hook)
-  local passing = Trick.active()
+  local passing = Climb.active()
     and G.GAME.modifiers.cm_pass
     and G.hand
 
@@ -99,7 +99,7 @@ G.FUNCS.discard_cards_from_highlighted = function(e, hook)
         G.GAME.current_round.discards_used = (G.GAME.current_round.discards_used or 0) + 1
       end
     end
-    Trick.clear_lock()
+    Climb.clear_lock()
     alert("pass")
   end
   return ret
@@ -131,11 +131,11 @@ function mod_mult(_mult)
   then
     local round = G.GAME.current_round
     local this_hand = round and round.hands_played
-    if ChallengeMod.Trick.shed_applied ~= this_hand then
+    if ChallengeMod.Climb.shed_applied ~= this_hand then
       local handname = G.GAME.last_hand_played
-      local x = handname and ChallengeMod.Trick.shed_xmult(handname)
+      local x = handname and ChallengeMod.Climb.shed_xmult(handname)
       if x then
-        ChallengeMod.Trick.shed_applied = this_hand
+        ChallengeMod.Climb.shed_applied = this_hand
         _mult = _mult * x
         alert(("shed X%s"):format(tostring(x)))
       end
