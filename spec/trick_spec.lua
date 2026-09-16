@@ -483,31 +483,41 @@ describe("no redraw", function()
   end)
 end)
 
+-- Printed nominals, needed because the wrapper reads base.nominal.
+local NOMINAL_FOR = {
+  [5] = 5, [10] = 10, [11] = 10, [12] = 10, [13] = 10, [14] = 11, [2] = 2,
+}
+
 describe("Big 2 sort order", function()
   local nominal
 
   before_each(function()
     _G.ChallengeMod = {}
     _G.G = { handlist = HANDLIST, GAME = { modifiers = {} } }
-    -- Vanilla nominal plus face_nominal, which is how J/Q/K separate.
-    local VANILLA = {
+    -- Mirrors the real formula: 10*nominal + suit terms + 10*face_nominal.
+    -- A stub returning a bare nominal is what let a too-small shift pass --
+    -- adding 13 to a raw 2 looks like it beats 11, but against the scaled
+    -- values it does not.
+    local NOMINAL = {
       [5] = 5, [10] = 10, [11] = 10, [12] = 10, [13] = 10, [14] = 11, [2] = 2,
     }
+    local FACE = { [11] = 0.1, [12] = 0.2, [13] = 0.3, [14] = 0.4 }
+    _G.SMODS = { has_no_rank = function() return false end }
     _G.Card = {
       get_nominal = function(self, mod)
-        local n = VANILLA[self.base.id] or 0
-        if mod == "suit" then return n * 10000 end
-        return n
+        local n = NOMINAL[self.base.id] or 0
+        local suit = mod == "suit" and 4 * 10000 or 4
+        return 10 * n + suit + 10 * (FACE[self.base.id] or 0)
       end,
     }
     assert(loadfile("smods/rules_sort.lua"))()
     nominal = function(id, mod)
-      return _G.Card.get_nominal({ base = { id = id } }, mod)
+      return _G.Card.get_nominal({ base = { id = id, nominal = NOMINAL_FOR[id] } }, mod)
     end
   end)
 
   it("leaves the order alone when off", function()
-    assert.equal(2, nominal(2))
+    assert.equal(24, nominal(2))
   end)
 
   -- The mistake this fixes: a 2 sitting next to the 3s, so it reads as the
@@ -518,10 +528,11 @@ describe("Big 2 sort order", function()
   end)
 
   it("moves only the 2", function()
+    local plain = {}
+    for _, id in ipairs({ 5, 10, 11, 12, 13, 14 }) do plain[id] = nominal(id) end
     G.GAME.modifiers.cm_rank_chips = true
     for _, id in ipairs({ 5, 10, 11, 12, 13, 14 }) do
-      assert.equal(nominal(id), _G.Card.get_nominal({ base = { id = id } }),
-        "rank " .. id .. " should be untouched")
+      assert.equal(plain[id], nominal(id), "rank " .. id .. " should be untouched")
     end
   end)
 

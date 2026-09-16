@@ -1,7 +1,7 @@
 -- Big 2, as a Balatro challenge. See docs/big-wee-design.md.
 local Challenge = {}
 Challenge.NAME = "Big Wee"
-Challenge.DESIGNER = "BU-CB"
+Challenge.DESIGNER = "jimmyy"
 Challenge.DATE_CREATED = 260915 -- Y/M/D
 Challenge.VERSION = "0.1.0"
 Challenge.DATA = {
@@ -40,6 +40,9 @@ Challenge.DATA = {
       -- 3-card trick would make every legal continuation illegal and the round
       -- unwinnable.
       { id = "bl_psychic", type = "blind" },
+      -- The Eye forces a different hand type every hand while the trick lock
+      -- wants the same size repeated, which can leave a round unwinnable.
+      { id = "bl_eye", type = "blind" },
     },
   },
 }

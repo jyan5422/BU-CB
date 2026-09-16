@@ -11,12 +11,16 @@
 -- intended, but it is a real scoring change, not only a cosmetic one.
 local get_nominal_ref = Card.get_nominal
 
--- Only the 2 needs moving. Vanilla nominals already sort correctly for
--- everything else -- J, Q and K share a nominal of 10 and are separated by
--- face_nominal, which is left alone, and the ace is 11. The 2 is the one card
--- whose printed value puts it at the wrong end.
+-- Only the 2 needs moving. Vanilla nominals already order everything else --
+-- J, Q and K share a nominal of 10 and separate via face_nominal, and the ace
+-- is 11. The 2 is the one card whose printed value puts it at the wrong end.
+--
+-- The target is a NOMINAL, not a sort value: get_nominal returns
+-- 10*nominal + suit terms + 10*face_nominal, so a shift has to be scaled by
+-- the same 10 or it disappears against the suit contribution. An earlier
+-- version added 13 to the result, which left a 2 on 37 against an ace on 118.
 local BIG_TWO_NOMINAL = {
-  [2] = 15, -- above the ace's 11, so it sorts to the top
+  [2] = 16, -- clear of the ace's 11 even with suit and face terms
 }
 
 function Card:get_nominal(mod)
@@ -30,10 +34,10 @@ function Card:get_nominal(mod)
   local replacement = id and BIG_TWO_NOMINAL[id]
   if not replacement then return base end
 
-  -- Suit sorting multiplies the rank by 10000 and adds the suit, so the
-  -- substitution has to keep that shape or suit sorting breaks.
-  if mod == "suit" then
-    return base + (replacement - id) * 10000
-  end
-  return base + (replacement - id)
+  -- nominal is multiplied by 10 in both modes, and rank_mult zeroes it for
+  -- rankless cards -- in which case there is nothing to reorder.
+  if SMODS.has_no_rank and SMODS.has_no_rank(self) then return base end
+  local nominal = self.base and self.base.nominal
+  if not nominal then return base end
+  return base + 10 * (replacement - nominal)
 end
