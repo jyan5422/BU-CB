@@ -9,8 +9,15 @@ challenge that happens to list all of them.
 
 ## Status
 
-Design agreed; implementation next. Seven modifiers, of which the trick lock is
-the only substantial one.
+Implemented and being played. Eight modifiers, of which the climb rule is the
+only substantial one.
+
+The rules were later checked against pagat's Big Two page, which confirmed the
+rank order (2-A-K-Q-J-10 down to 3), the suit order
+(spades-hearts-clubs-diamonds), a full house being compared by its triple, and
+a five-card group being beaten by a stronger type. Big Two is a **climbing**
+game in pagat's taxonomy, not a multi-trick one, which is why the modifiers are
+named `cm_climb` rather than anything involving tricks.
 
 ## The modifiers
 
@@ -33,9 +40,11 @@ cases; locking on count lets Balatro's own hand order rank them.
 | 4 cards | 4 cards, stronger hand, rank as tiebreak |
 | 5 cards | 5 cards, stronger hand, rank as tiebreak |
 
-Four-card plays are not a Big 2 shape, but Balatro offers them, so they get
-their own bucket rather than being banned — disabling a play the UI presents
-would read as broken.
+Four-card plays are **not legal in Big Two** -- pagat is explicit that a five
+card group is the only multi-card play above a triple -- but Balatro offers
+them, so they get their own bucket rather than being banned. Disabling a play
+the UI presents would read as broken, and where the two games disagree this is
+Balatro's. Decided deliberately, not overlooked.
 
 **Rank order** (low to high): `3 4 5 6 7 8 9 10 J Q K A 2`. The 2 is highest,
 as in Big 2; the Ace sits above the King.
