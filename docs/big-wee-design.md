@@ -254,11 +254,11 @@ through chips alone.
 
 Each should fit on one line, like a joker:
 
-- +5 hand size, but no cards are drawn until the next round.
-- Hands must match the last hand's size and beat its rank.
-- Same size and higher rank earns a discard.
-- Discard nothing to pass.
-- Up to X6.5 when no cards are held in hand, higher hands give more.
+- +5 hand size, dealt once per round.
+- Climb: same size, higher rank.
+- Each climb earns a discard.
+- Discard to start a new climb.
+- Empty your hand for up to X4.
 
 ## Open questions
 
