@@ -11,9 +11,9 @@ function ChallengeMod.localizeMechDescriptions()
   G.localization.misc.v_text.ch_c_cm_decreasing_handsize = { "Hand size {C:attention}Decreases{} each Ante" }
   G.localization.misc.v_text.ch_c_cm_random_deck = { "Your deck is {C:attention}randomized{}" }
   G.localization.misc.v_text.ch_c_cm_mult_dollar_cap = { "{C:blue}Mult{} cannot exceed the current {C:money}$" }
-  G.localization.misc.v_text.ch_c_cm_climb = { "Play the same {C:attention}size{}, higher {C:attention}rank{}" }
-  G.localization.misc.v_text.ch_c_cm_pass = { "Discard nothing to {C:attention}pass{}" }
-  G.localization.misc.v_text.ch_c_cm_climb_refund = { "Beat it, get a {C:red}discard{} back" }
+  G.localization.misc.v_text.ch_c_cm_climb = { "{C:attention}Climb{}: same size, higher rank" }
+  G.localization.misc.v_text.ch_c_cm_pass = { "{C:attention}Discard{} to start a new climb" }
+  G.localization.misc.v_text.ch_c_cm_climb_refund = { "Each {C:attention}climb{} earns a {C:red}discard{}" }
   G.localization.misc.v_text.ch_c_cm_shed_bonus = { "Empty your hand for up to {X:mult,C:white}X6.5{}" }
   G.localization.misc.v_text.ch_c_cm_rank_chips = { "{C:attention}2{} is the highest card" }
   G.localization.misc.v_text.ch_c_cm_suit_chips = { "{C:attention}Spades{} > hearts > clubs > diamonds" }
