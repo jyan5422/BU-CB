@@ -6,15 +6,16 @@
 ChallengeMod.Chips = ChallengeMod.Chips or {}
 local Chips = ChallengeMod.Chips
 
--- Target minus base, so chip value tracks Big 2's rank order: 3..10 unchanged,
--- J 11, Q 12, K 13, A 15, and the 2 highest at 14. Ace and 2 sit above the
--- king, which vanilla chips do not express.
+-- Target minus base, so chip value matches Big 2's rank order exactly:
+-- 3..10 unchanged, J 11, Q 12, K 13, A 14, and the 2 highest at 15. An earlier
+-- version had A 15 and 2 14, which scored the ace above the 2 while the 2
+-- outranks it -- chips and rank disagreeing on the top card.
 local RANK_BONUS = {
-  [2] = 12, -- 2 -> 14
+  [2] = 13, -- 2 -> 15, the highest card in both rank and chips
   [11] = 1, -- J -> 11
   [12] = 2, -- Q -> 12
   [13] = 3, -- K -> 13
-  [14] = 4, -- A -> 15
+  [14] = 3, -- A -> 14
 }
 
 local SUIT_BONUS = {

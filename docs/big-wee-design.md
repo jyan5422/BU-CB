@@ -95,11 +95,15 @@ Applied through `perma_bonus`, the same field Hiker uses, which
 
 | card | base | target | bonus |
 |---|---|---|---|
-| 2 | 2 | 14 | +12 |
+| 2 | 2 | 15 | +13 |
 | J | 10 | 11 | +1 |
 | Q | 10 | 12 | +2 |
 | K | 10 | 13 | +3 |
-| A | 11 | 15 | +4 |
+| A | 11 | 14 | +3 |
+
+Chips match the rank order exactly, so the highest card is also the
+highest-scoring one. An earlier draft had A 15 and 2 14, which scored the ace
+above the 2 while the 2 outranked it.
 
 Chip value then tracks Big 2's rank order, so the strongest card is also the
 highest scoring and the ordering is legible from the numbers alone.

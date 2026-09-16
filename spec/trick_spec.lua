@@ -363,13 +363,15 @@ describe("Big 2 chip bonuses", function()
     assert.equal(0, Chips.bonus(card(2, "Spades")))
   end)
 
-  it("lifts the 2 to the top", function()
+  -- Chips must agree with the rank order: the 2 is the highest card, so it
+  -- also scores most. An earlier version scored the ace above it.
+  it("makes the 2 score highest", function()
     G.GAME.modifiers.cm_rank_chips = true
-    -- 2 base + 12 = 14, above an ace's 11 + 4 = 15? No: the ace is highest by
-    -- chips, the 2 by rank. Chips only need the 2 to outscore a king.
-    assert.equal(12, Chips.bonus(card(2)))
-    assert.equal(3, Chips.bonus(card(13)))
-    assert.equal(4, Chips.bonus(card(14)))
+    local function total(id, base) return base + Chips.bonus(card(id)) end
+    assert.equal(15, total(2, 2))
+    assert.equal(14, total(14, 11))
+    assert.equal(13, total(13, 10))
+    assert.is_true(total(2, 2) > total(14, 11), "the 2 must outscore the ace")
   end)
 
   it("leaves the number cards alone", function()
@@ -390,7 +392,8 @@ describe("Big 2 chip bonuses", function()
   it("adds rank and suit together", function()
     G.GAME.modifiers.cm_rank_chips = true
     G.GAME.modifiers.cm_suit_chips = true
-    assert.equal(15, Chips.bonus(card(2, "Spades")))
+    -- +13 rank, +3 spades: a 2 of spades scores 2 + 16 = 18.
+    assert.equal(16, Chips.bonus(card(2, "Spades")))
   end)
 
   -- Stone cards have no printed rank or suit.
