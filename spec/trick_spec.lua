@@ -314,6 +314,17 @@ describe("the shed bonus", function()
     assert.is_nil(Trick.shed_xmult("Nonsense"))
     assert.is_nil(Trick.shed_xmult(nil))
   end)
+
+  -- The rule text quotes the ceiling ("Up to X6.5"), so it lies silently if
+  -- the formula or G.handlist changes. Pin it.
+  it("tops out at the X6.5 the rule text promises", function()
+    local max = 0
+    for _, h in ipairs(G.handlist) do
+      local x = Trick.shed_xmult(h)
+      if x and x > max then max = x end
+    end
+    assert.equal(6.5, max)
+  end)
 end)
 
 describe("Big 2 chip bonuses", function()

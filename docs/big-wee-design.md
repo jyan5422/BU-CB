@@ -240,7 +240,7 @@ Each should fit on one line, like a joker:
 - Hands must match the last hand's size and beat its rank.
 - Same size and higher rank earns a discard.
 - Discard nothing to pass.
-- Xmult for the hand that empties your hand, higher hands give more.
+- Up to X6.5 when no cards are held in hand, higher hands give more.
 
 ## Open questions
 
