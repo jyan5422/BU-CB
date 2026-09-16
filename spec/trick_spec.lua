@@ -396,7 +396,7 @@ describe("no redraw", function()
   end)
 
   it("allows everything when off", function()
-    G.GAME.current_round.cm_dealt = true
+    G.GAME.current_round.any_hand_drawn = true
     assert.is_true(Draw.allow())
   end)
 
@@ -409,34 +409,30 @@ describe("no redraw", function()
 
   it("blocks refills once the round has dealt", function()
     G.GAME.modifiers.cm_no_redraw = true
-    G.GAME.current_round.cm_dealt = true
+    G.GAME.current_round.any_hand_drawn = true
     assert.is_false(Draw.allow())
   end)
 
   -- Booster packs draw into the hand for their selection UI.
   it("still fills booster packs", function()
     G.GAME.modifiers.cm_no_redraw = true
-    G.GAME.current_round.cm_dealt = true
+    G.GAME.current_round.any_hand_drawn = true
     for _, state in ipairs({ G.STATES.TAROT_PACK, G.STATES.SPECTRAL_PACK, G.STATES.SMODS_BOOSTER_OPENED }) do
       G.STATE = state
       assert.is_true(Draw.allow(), "booster pack draw was blocked")
     end
   end)
 
-  it("marks the round dealt once cards are in hand", function()
-    G.GAME.modifiers.cm_no_redraw = true
-    Game.update(G, 0.016)
-    assert.is_falsy(G.GAME.current_round.cm_dealt)
-    G.hand.cards = { {}, {} }
-    Game.update(G, 0.016)
-    assert.is_true(G.GAME.current_round.cm_dealt)
-  end)
-
-  -- current_round is reset by the game each round, so the next round deals.
+  -- The bug this replaced: current_round is mutated field by field between
+  -- rounds, not replaced, so a key of our own survived and blocked the next
+  -- round's opening deal. any_hand_drawn is the game's own flag and is one of
+  -- the fields it clears, so a new round deals again.
   it("deals again next round", function()
     G.GAME.modifiers.cm_no_redraw = true
-    G.GAME.current_round.cm_dealt = true
-    G.GAME.current_round = {}
+    G.GAME.current_round.any_hand_drawn = true
+    assert.is_false(Draw.allow())
+    -- What the game actually does at the start of a round.
+    G.GAME.current_round.any_hand_drawn = nil
     assert.is_true(Draw.allow())
   end)
 end)
