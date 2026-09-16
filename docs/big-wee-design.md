@@ -136,7 +136,22 @@ refunds to points.
 It also reads right: keeping control of the trick means you never had to pass,
 so you get the pass back.
 
-### 7. `cm_shed_bonus` — going out pays, by how you go out
+### 7. `cm_no_redraw` — the hand is dealt once
+
+Thirteen cards at the start of a round, and nothing drawn after. Playing five
+leaves eight: the dwindling hand is the game, and it is what produces the Big 2
+endgame of holding three cards that have to do something.
+
+The opening deal and every refill share one function, so the patch cannot
+simply block all draws -- the round would start empty. `ChallengeMod.Draw`
+tracks whether the round has dealt and lets only the first through. Booster
+packs are exempt, since they draw into the hand for their own selection UI.
+
+The 13 cards are the compensation: two full 5-card plays and a trailing 3, so a
+round is 2-3 plays before the hand runs dry. If that plays too harshly the dial
+is the hand size, not a new mechanic.
+
+### 8. `cm_shed_bonus` — going out pays, by how you go out
 
 Playing your **last** card earns an Xmult graded on the hand you go out with,
 taken from `G.handlist` so it needs no ranking of its own:
@@ -185,7 +200,7 @@ empty hand with the limit still at 13 is safe -- it simply draws nothing.
 
 - Hand size **13** (52 / 4 players), dealt per round
 - **4** hands, **4** discards to start — a guess, to be tuned by play
-- All seven modifiers above
+- All eight modifiers above
 - **The Psychic banned** (`bl_psychic`, `debuff = {h_size_ge = 5}`): it requires
   every played hand to contain 5 cards, so a 1-, 2- or 3-card lock would make
   every legal continuation illegal and the round unwinnable. It runs through the
@@ -214,6 +229,7 @@ through chips alone.
 
 Each should fit on one line, like a joker:
 
+- Your hand is dealt once per round.
 - Hands must match the last hand's size and beat its rank.
 - Same size and higher rank earns a discard.
 - Discard nothing to pass.

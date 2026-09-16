@@ -1,0 +1,26 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+# cm_no_redraw: the round's hand is dealt once and never refilled.
+#
+# Big 2 deals thirteen cards and that is your hand for the whole round: playing
+# five leaves eight. The dwindling hand is the game, so nothing is drawn after
+# the opening deal.
+#
+# All draws go through the same function, including the opening one, so the
+# first deal of a round has to be let through or the round starts empty.
+# ChallengeMod.Draw.allow tracks that. The patch sits on the `limit` line
+# rather than the early return, so the game-over check above it still runs
+# normally.
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "local limit = (G.hand.config.card_limit - #G.hand.cards - (SMODS.cards_to_draw or 0))"
+position = "after"
+payload = """
+if ChallengeMod and ChallengeMod.Draw and not ChallengeMod.Draw.allow() then limit = 0 end
+"""
+match_indent = true
+overwrite = false

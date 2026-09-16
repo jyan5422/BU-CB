@@ -14,6 +14,7 @@ Challenge.DATA = {
       { id = "cm_rank_chips" },
       { id = "cm_suit_chips" },
       { id = "cm_wrap_straights" },
+      { id = "cm_no_redraw" },
     },
     modifiers = {
       -- 52 cards over 4 players, as Big 2 deals. Nothing is drawn after a

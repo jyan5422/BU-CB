@@ -377,3 +377,66 @@ describe("Big 2 chip bonuses", function()
     assert.equal(0, Chips.bonus({}))
   end)
 end)
+
+describe("no redraw", function()
+  local Draw
+
+  before_each(function()
+    _G.ChallengeMod = {}
+    _G.Game = { update = function() end }
+    _G.G = {
+      handlist = HANDLIST,
+      GAME = { modifiers = {}, current_round = {} },
+      STATES = { TAROT_PACK = 1, SPECTRAL_PACK = 2, SMODS_BOOSTER_OPENED = 3, SELECTING_HAND = 4 },
+      STATE = 4,
+      hand = { cards = {} },
+    }
+    assert(loadfile("smods/rules_draw.lua"))()
+    Draw = _G.ChallengeMod.Draw
+  end)
+
+  it("allows everything when off", function()
+    G.GAME.current_round.cm_dealt = true
+    assert.is_true(Draw.allow())
+  end)
+
+  -- The opening deal goes through the same function as every refill, so
+  -- blocking all draws would start the round with an empty hand.
+  it("allows the opening deal", function()
+    G.GAME.modifiers.cm_no_redraw = true
+    assert.is_true(Draw.allow())
+  end)
+
+  it("blocks refills once the round has dealt", function()
+    G.GAME.modifiers.cm_no_redraw = true
+    G.GAME.current_round.cm_dealt = true
+    assert.is_false(Draw.allow())
+  end)
+
+  -- Booster packs draw into the hand for their selection UI.
+  it("still fills booster packs", function()
+    G.GAME.modifiers.cm_no_redraw = true
+    G.GAME.current_round.cm_dealt = true
+    for _, state in ipairs({ G.STATES.TAROT_PACK, G.STATES.SPECTRAL_PACK, G.STATES.SMODS_BOOSTER_OPENED }) do
+      G.STATE = state
+      assert.is_true(Draw.allow(), "booster pack draw was blocked")
+    end
+  end)
+
+  it("marks the round dealt once cards are in hand", function()
+    G.GAME.modifiers.cm_no_redraw = true
+    Game.update(G, 0.016)
+    assert.is_falsy(G.GAME.current_round.cm_dealt)
+    G.hand.cards = { {}, {} }
+    Game.update(G, 0.016)
+    assert.is_true(G.GAME.current_round.cm_dealt)
+  end)
+
+  -- current_round is reset by the game each round, so the next round deals.
+  it("deals again next round", function()
+    G.GAME.modifiers.cm_no_redraw = true
+    G.GAME.current_round.cm_dealt = true
+    G.GAME.current_round = {}
+    assert.is_true(Draw.allow())
+  end)
+end)

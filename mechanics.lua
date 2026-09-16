@@ -18,6 +18,7 @@ function ChallengeMod.localizeMechDescriptions()
   G.localization.misc.v_text.ch_c_cm_rank_chips = { "{C:attention}2{} is the highest card, and scores like it" }
   G.localization.misc.v_text.ch_c_cm_suit_chips = { "{C:attention}Spades{} score most, then hearts, clubs, diamonds" }
   G.localization.misc.v_text.ch_c_cm_wrap_straights = { "{C:attention}Straights{} may wrap around" }
+  G.localization.misc.v_text.ch_c_cm_no_redraw = { "Your hand is dealt {C:attention}once{} per round" }
   G.localization.misc.v_text.ch_c_all_rental = { "All Jokers are {C:attention}Rental{}" }
   G.localization.misc.v_text.ch_c_cm_force_hand = { "Played hands must contain a {C:blue}#1#{}" }
   G.localization.misc.v_text.ch_c_cm_negative_interest = { "Money is lost from {C:attention}Interest{}" }
@@ -74,6 +75,8 @@ function ChallengeMod.evaluate_rules(self, v)
     self.GAME.modifiers.cm_suit_chips = true
   elseif v.id == 'cm_wrap_straights' then
     self.GAME.modifiers.cm_wrap_straights = true
+  elseif v.id == 'cm_no_redraw' then
+    self.GAME.modifiers.cm_no_redraw = true
   elseif v.id == 'cm_decreasing_handsize' then
     self.GAME.modifiers.cm_decreasing_handsize = v.value
   elseif v.id == 'cm_scaling' then
