@@ -104,6 +104,10 @@ local mod_mult_ref = mod_mult
 function mod_mult(_mult)
   _mult = mod_mult_ref(_mult)
 
+  -- UNVERIFIED: this assumes the played cards have already left G.hand by the
+  -- time mult is computed, so #G.hand.cards is the remainder. That ordering
+  -- could not be confirmed from the game source and needs checking on device;
+  -- if it is wrong the bonus either never fires or fires on every hand.
   if G.GAME and G.GAME.modifiers and G.GAME.modifiers.cm_shed_bonus
     and G.hand and G.play
     and #G.hand.cards == 0 and #G.play.cards > 0
