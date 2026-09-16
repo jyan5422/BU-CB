@@ -315,3 +315,65 @@ describe("the shed bonus", function()
     assert.is_nil(Trick.shed_xmult(nil))
   end)
 end)
+
+describe("Big 2 chip bonuses", function()
+  local Chips
+
+  before_each(function()
+    _G.ChallengeMod = {}
+    _G.G = { handlist = HANDLIST, GAME = { modifiers = {} } }
+    _G.Card = { get_chip_bonus = function() return 0 end }
+    assert(loadfile("smods/rules_chips.lua"))()
+    Chips = _G.ChallengeMod.Chips
+  end)
+
+  -- is_suit rather than base.suit, so Wild cards count as what they are now.
+  local function card(id, suit)
+    return {
+      base = { id = id, suit = suit },
+      is_suit = function(_, s) return s == suit end,
+    }
+  end
+
+  it("does nothing unless the modifiers are on", function()
+    assert.equal(0, Chips.bonus(card(2, "Spades")))
+  end)
+
+  it("lifts the 2 to the top", function()
+    G.GAME.modifiers.cm_rank_chips = true
+    -- 2 base + 12 = 14, above an ace's 11 + 4 = 15? No: the ace is highest by
+    -- chips, the 2 by rank. Chips only need the 2 to outscore a king.
+    assert.equal(12, Chips.bonus(card(2)))
+    assert.equal(3, Chips.bonus(card(13)))
+    assert.equal(4, Chips.bonus(card(14)))
+  end)
+
+  it("leaves the number cards alone", function()
+    G.GAME.modifiers.cm_rank_chips = true
+    for _, id in ipairs({ 3, 5, 9, 10 }) do
+      assert.equal(0, Chips.bonus(card(id)))
+    end
+  end)
+
+  it("pays suits in Big 2 order", function()
+    G.GAME.modifiers.cm_suit_chips = true
+    assert.equal(3, Chips.bonus(card(9, "Spades")))
+    assert.equal(2, Chips.bonus(card(9, "Hearts")))
+    assert.equal(1, Chips.bonus(card(9, "Clubs")))
+    assert.equal(0, Chips.bonus(card(9, "Diamonds")))
+  end)
+
+  it("adds rank and suit together", function()
+    G.GAME.modifiers.cm_rank_chips = true
+    G.GAME.modifiers.cm_suit_chips = true
+    assert.equal(15, Chips.bonus(card(2, "Spades")))
+  end)
+
+  -- Stone cards have no printed rank or suit.
+  it("gives rankless, suitless cards nothing", function()
+    G.GAME.modifiers.cm_rank_chips = true
+    G.GAME.modifiers.cm_suit_chips = true
+    assert.equal(0, Chips.bonus({ base = {} }))
+    assert.equal(0, Chips.bonus({}))
+  end)
+end)

@@ -11,6 +11,13 @@ function ChallengeMod.localizeMechDescriptions()
   G.localization.misc.v_text.ch_c_cm_decreasing_handsize = { "Hand size {C:attention}Decreases{} each Ante" }
   G.localization.misc.v_text.ch_c_cm_random_deck = { "Your deck is {C:attention}randomized{}" }
   G.localization.misc.v_text.ch_c_cm_mult_dollar_cap = { "{C:blue}Mult{} cannot exceed the current {C:money}$" }
+  G.localization.misc.v_text.ch_c_cm_trick_lock = { "Hands must match the last hand's {C:attention}size{} and beat its {C:attention}rank{}" }
+  G.localization.misc.v_text.ch_c_cm_pass = { "Discard nothing to {C:attention}pass{}" }
+  G.localization.misc.v_text.ch_c_cm_trick_refund = { "Beating the last hand earns a {C:red}discard{}" }
+  G.localization.misc.v_text.ch_c_cm_shed_bonus = { "Play your {C:attention}last card{} for {C:mult}Xmult{}, better hands pay more" }
+  G.localization.misc.v_text.ch_c_cm_rank_chips = { "{C:attention}2{} is the highest card, and scores like it" }
+  G.localization.misc.v_text.ch_c_cm_suit_chips = { "{C:attention}Spades{} score most, then hearts, clubs, diamonds" }
+  G.localization.misc.v_text.ch_c_cm_wrap_straights = { "{C:attention}Straights{} may wrap around" }
   G.localization.misc.v_text.ch_c_all_rental = { "All Jokers are {C:attention}Rental{}" }
   G.localization.misc.v_text.ch_c_cm_force_hand = { "Played hands must contain a {C:blue}#1#{}" }
   G.localization.misc.v_text.ch_c_cm_negative_interest = { "Money is lost from {C:attention}Interest{}" }
@@ -53,6 +60,20 @@ function ChallengeMod.evaluate_rules(self, v)
     self.GAME.modifiers.cm_auto_pack = true
   elseif v.id == 'cm_mult_dollar_cap' then
     self.GAME.modifiers.cm_mult_dollar_cap = true
+  elseif v.id == 'cm_trick_lock' then
+    self.GAME.modifiers.cm_trick_lock = true
+  elseif v.id == 'cm_pass' then
+    self.GAME.modifiers.cm_pass = true
+  elseif v.id == 'cm_trick_refund' then
+    self.GAME.modifiers.cm_trick_refund = true
+  elseif v.id == 'cm_shed_bonus' then
+    self.GAME.modifiers.cm_shed_bonus = true
+  elseif v.id == 'cm_rank_chips' then
+    self.GAME.modifiers.cm_rank_chips = true
+  elseif v.id == 'cm_suit_chips' then
+    self.GAME.modifiers.cm_suit_chips = true
+  elseif v.id == 'cm_wrap_straights' then
+    self.GAME.modifiers.cm_wrap_straights = true
   elseif v.id == 'cm_decreasing_handsize' then
     self.GAME.modifiers.cm_decreasing_handsize = v.value
   elseif v.id == 'cm_scaling' then
