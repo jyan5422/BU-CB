@@ -12,9 +12,9 @@ function ChallengeMod.localizeMechDescriptions()
   G.localization.misc.v_text.ch_c_cm_random_deck = { "Your deck is {C:attention}randomized{}" }
   G.localization.misc.v_text.ch_c_cm_mult_dollar_cap = { "{C:blue}Mult{} cannot exceed the current {C:money}$" }
   G.localization.misc.v_text.ch_c_cm_climb = { "{C:attention}Climb{}: same size, higher rank" }
-  G.localization.misc.v_text.ch_c_cm_pass = { "{C:attention}Discard{} to start a new climb" }
+  G.localization.misc.v_text.ch_c_cm_pass = { "{C:red}#1#{} discards, but {C:attention}discard{} to start a new climb" }
   G.localization.misc.v_text.ch_c_cm_climb_refund = { "Each {C:attention}climb{} earns a {C:red}discard{}" }
-  G.localization.misc.v_text.ch_c_cm_shed_bonus = { "Empty your hand for up to {X:mult,C:white}X6.5{}" }
+  G.localization.misc.v_text.ch_c_cm_shed_bonus = { "Empty your hand for up to {X:mult,C:white}X4{}" }
   G.localization.misc.v_text.ch_c_cm_rank_chips = { "{C:attention}2{} is the highest card" }
   G.localization.misc.v_text.ch_c_cm_suit_chips = { "{C:attention}Spades{} > hearts > clubs > diamonds" }
   G.localization.misc.v_text.ch_c_cm_wrap_straights = { "{C:attention}Straights{} may wrap around" }
@@ -64,7 +64,15 @@ function ChallengeMod.evaluate_rules(self, v)
   elseif v.id == 'cm_climb' then
     self.GAME.modifiers.cm_climb = true
   elseif v.id == 'cm_pass' then
+    -- Value is a discard PENALTY, applied like the hand size bonus so it
+    -- breathes with whatever the deck grants: -3 on the base 3 leaves none,
+    -- but a deck that gives extra discards keeps them.
+    local cost = tonumber(v.value) or 0
     self.GAME.modifiers.cm_pass = true
+    if cost ~= 0 and self.GAME.starting_params then
+      self.GAME.starting_params.discards =
+        math.max(self.GAME.starting_params.discards + cost, 0)
+    end
   elseif v.id == 'cm_climb_refund' then
     self.GAME.modifiers.cm_climb_refund = true
   elseif v.id == 'cm_shed_bonus' then

@@ -8,7 +8,9 @@ Challenge.DATA = {
   rules = {
     custom = {
       { id = "cm_climb" },
-      { id = "cm_pass" },
+      -- -3 on the base 3 leaves no discards, so every pass has to be earned
+      -- by climbing. Written as a penalty so a deck granting extras keeps them.
+      { id = "cm_pass", value = -3 },
       { id = "cm_climb_refund" },
       { id = "cm_shed_bonus" },
       { id = "cm_rank_chips" },
@@ -21,9 +23,7 @@ Challenge.DATA = {
     modifiers = {
       -- Hand size comes from cm_no_redraw's +5, not a flat value here.
       { id = "hands", value = 4 },
-      -- Default 3: a challenge should feel like a boss, and passes are meant
-      -- to be scarce.
-      { id = "discards", value = 3 },
+      -- Discards come from cm_pass's -3, not a flat value here.
     },
   },
   jokers = {},

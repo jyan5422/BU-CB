@@ -178,25 +178,26 @@ is the hand size, not a new mechanic.
 Playing your **last** card earns an Xmult graded on the hand you go out with,
 taken from `G.handlist` so it needs no ranking of its own:
 
-`Xmult = 1 + (tier - 1) * 0.5`, where tier 1 is High Card and 12 is Flush Five.
+
+
+Keyed on what the hand **contains**, not Balatro's tier index, so the numbers
+stay small and predictable -- a pair is X2 whether it is a bare pair, two pair
+or sitting inside a flush.
 
 | exit hand | Xmult |
 |---|---|
-| Flush Five | 6.5x |
-| Flush House | 6.0x |
-| Five of a Kind | 5.5x |
-| Straight Flush | 5.0x |
-| Four of a Kind | 4.5x |
-| Full House | 4.0x |
-| Flush | 3.5x |
-| Straight | 3.0x |
-| Three of a Kind | 2.5x |
-| Two Pair | 2.0x |
-| Pair | 1.5x |
-| High Card | none (1x) |
+| Pair, Two Pair, Flush | X2 |
+| Three of a Kind, Straight, Full House | X3 |
+| Four of a Kind and above | X4 |
+| High Card | none |
 
-High Card landing on exactly 1x is what makes this work: dumping your last five
-junk cards still gets you out, but pays nothing. Going out on a hand you held
+A full house pays X3 for its triple even though it outranks a straight, and
+everything from four of a kind up pays X4 -- those are rare enough that
+splitting them further would go unnoticed. An earlier version scaled 1.5 to 6.5
+across all twelve tiers, which was finer-grained than a player could read.
+
+High Card paying nothing is what makes this work: dumping your last five junk
+cards still gets you out, but earns no bonus. Going out on a hand you held
 back deliberately pays properly. Combined with the cheap junk *opener*, the
 ideal round is open weak, climb, exit strong.
 
@@ -221,7 +222,9 @@ empty hand with the limit still at 13 is safe -- it simply draws nothing.
 ## The challenge
 
 - Hand size **+5**, giving the 13 that Big 2 deals from a vanilla base of 8
-- **4** hands, **4** discards to start — a guess, to be tuned by play
+- **4** hands to start, and **no** discards: `cm_pass` carries a **-3** penalty
+  on the base 3, so every pass must be earned by climbing. Written as a penalty
+  rather than a flat 0 so a deck granting extra discards keeps them.
 - All eight modifiers above
 - **The Psychic banned** (`bl_psychic`, `debuff = {h_size_ge = 5}`): it requires
   every played hand to contain 5 cards, so a 1-, 2- or 3-card lock would make

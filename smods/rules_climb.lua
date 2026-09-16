@@ -194,12 +194,29 @@ function Climb.active()
 end
 
 --- Xmult for going out on `handname`; nil when there is no bonus.
--- 1 + (tier-1) * 0.5 puts High Card on exactly 1x, so dumping junk to get out
--- pays nothing while a hand held back deliberately pays properly.
+--
+-- Keyed on what the hand contains rather than Balatro's tier index, which
+-- keeps the numbers small and predictable: a pair is worth X2 whether it is a
+-- bare pair, two pair or inside a flush. The earlier version scaled 1.5 to 6.5
+-- across twelve tiers, which was finer-grained than anyone could read.
+--
+-- A full house is X3 for its triple, even though it outranks a straight, and
+-- everything at four of a kind or above is X4 -- those are rare enough that
+-- splitting them further would not be noticed.
+local SHED_XMULT = {
+  ["Pair"] = 2,
+  ["Two Pair"] = 2,
+  ["Flush"] = 2,
+  ["Three of a Kind"] = 3,
+  ["Straight"] = 3,
+  ["Full House"] = 3,
+  ["Four of a Kind"] = 4,
+  ["Straight Flush"] = 4,
+  ["Five of a Kind"] = 4,
+  ["Flush House"] = 4,
+  ["Flush Five"] = 4,
+}
+
 function Climb.shed_xmult(handname)
-  local tier = Climb.hand_tier(handname)
-  if not tier then return nil end
-  local x = 1 + (tier - 1) * 0.5
-  if x <= 1 then return nil end
-  return x
+  return handname and SHED_XMULT[handname] or nil
 end

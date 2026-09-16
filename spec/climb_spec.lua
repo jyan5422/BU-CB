@@ -307,20 +307,30 @@ end)
 
 describe("the shed bonus", function()
   before_each(load_module)
+
   it("pays nothing for going out on junk", function()
     assert.is_nil(Climb.shed_xmult("High Card"))
   end)
 
-  it("pays the agreed anchors", function()
-    assert.equal(3.0, Climb.shed_xmult("Straight"))
-    assert.equal(4.5, Climb.shed_xmult("Four of a Kind"))
-    assert.equal(1.5, Climb.shed_xmult("Pair"))
-    assert.equal(6.5, Climb.shed_xmult("Flush Five"))
+  -- Keyed on what the hand contains, so a pair is X2 wherever it appears.
+  it("pays X2 for a pair, two pair or a flush", function()
+    assert.equal(2, Climb.shed_xmult("Pair"))
+    assert.equal(2, Climb.shed_xmult("Two Pair"))
+    assert.equal(2, Climb.shed_xmult("Flush"))
   end)
 
-  it("pays more for stronger hands", function()
-    assert.is_true(Climb.shed_xmult("Full House") > Climb.shed_xmult("Flush"))
-    assert.is_true(Climb.shed_xmult("Flush") > Climb.shed_xmult("Straight"))
+  it("pays X3 for a triple, a straight or a full house", function()
+    assert.equal(3, Climb.shed_xmult("Three of a Kind"))
+    assert.equal(3, Climb.shed_xmult("Straight"))
+    -- A full house contains a triple; it outranks a straight but pays the same.
+    assert.equal(3, Climb.shed_xmult("Full House"))
+  end)
+
+  it("pays X4 for four of a kind and anything above it", function()
+    for _, h in ipairs({ "Four of a Kind", "Straight Flush", "Five of a Kind",
+                         "Flush House", "Flush Five" }) do
+      assert.equal(4, Climb.shed_xmult(h), h .. " should pay X4")
+    end
   end)
 
   it("is nil for an unknown hand", function()
@@ -328,15 +338,14 @@ describe("the shed bonus", function()
     assert.is_nil(Climb.shed_xmult(nil))
   end)
 
-  -- The rule text quotes the ceiling ("Up to X6.5"), so it lies silently if
-  -- the formula or G.handlist changes. Pin it.
-  it("tops out at the X6.5 the rule text promises", function()
+  -- The rule text quotes the ceiling, so it lies silently if this drifts.
+  it("tops out at the X4 the rule text promises", function()
     local max = 0
     for _, h in ipairs(G.handlist) do
       local x = Climb.shed_xmult(h)
       if x and x > max then max = x end
     end
-    assert.equal(6.5, max)
+    assert.equal(4, max)
   end)
 end)
 
