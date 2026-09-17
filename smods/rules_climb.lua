@@ -223,3 +223,35 @@ local SHED_XMULT = {
 function Climb.shed_xmult(handname)
   return handname and SHED_XMULT[handname] or nil
 end
+
+--- Extra text appended to the hand name while cards are selected.
+--
+-- The game's own label says only "will not score", which tells the player
+-- neither why nor what to do about it. This adds the climb requirement and,
+-- when the selection would empty the hand, the shed bonus it would earn.
+--
+-- Returns "" rather than nil when there is nothing to add, so callers can
+-- concatenate unconditionally.
+function Climb.hand_suffix(cards, handname)
+  local parts = {}
+
+  if Climb.active() then
+    local lock = Climb.get_lock()
+    if lock then
+      parts[#parts + 1] = ("Climbing %d cards, discard to reset"):format(lock.count)
+    end
+  end
+
+  if G.GAME and G.GAME.modifiers and G.GAME.modifiers.cm_shed_bonus
+    and G.hand and cards
+    and #G.hand.cards > 0 and #cards == #G.hand.cards
+  then
+    local x = Climb.shed_xmult(handname)
+    if x then
+      parts[#parts + 1] = ("empties hand: X%s"):format(tostring(x))
+    end
+  end
+
+  if #parts == 0 then return "" end
+  return "\n" .. table.concat(parts, "\n")
+end
