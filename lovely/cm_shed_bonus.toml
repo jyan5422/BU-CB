@@ -10,13 +10,35 @@ priority = 0
 # once-per-hand guard caught the first call and the bonus scaled the BASE mult,
 # with every joker afterwards compounding on top. Here `mult` is the finished
 # total, and `mult` itself is a local so it can only be reached by patching.
+#
+# SMODS.Scoring_Parameters.mult.current has to be written too: the round score
+# comes from SMODS.calculate_round_score, which reads that parameter rather
+# than this local. Setting only the local moved the on-screen mult from x1 to
+# x3 while the round score stayed put -- observed in play.
 [[patches]]
 [patches.pattern]
 target = "functions/state_events.lua"
 pattern = "hand_chips = mod_chips(nu_chip or hand_chips)"
 position = "after"
 payload = """
-mult = mult * ((ChallengeMod and ChallengeMod.Climb and ChallengeMod.Climb.shed_multiplier and ChallengeMod.Climb.shed_multiplier()) or 1)
+if ChallengeMod and ChallengeMod.Climb and ChallengeMod.Climb.shed_multiplier then
+  local _x = ChallengeMod.Climb.shed_multiplier()
+  if _x and _x > 1 then
+    mult = mult * _x
+    -- The score is totalled from SMODS.Scoring_Parameters, not this local, so
+    -- updating `mult` alone changed the display and nothing else.
+    if SMODS and SMODS.Scoring_Parameters and SMODS.Scoring_Parameters.mult then
+      SMODS.Scoring_Parameters.mult.current = mult
+    end
+    -- Announce it the way a joker announces its own Xmult, anchored to the
+    -- played cards so it flashes centre-screen after the last joker has gone.
+    if card_eval_status_text and G.play and G.play.cards[1] then
+      card_eval_status_text(G.play.cards[#G.play.cards], 'x_mult', _x, nil, nil,
+        { message = ('X%s Shed'):format(tostring(_x)), colour = G.C.MULT })
+    end
+    update_hand_text({ delay = 0 }, { mult = mult })
+  end
+end
 """
 match_indent = true
 overwrite = false

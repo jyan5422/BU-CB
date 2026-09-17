@@ -173,8 +173,8 @@ function ChallengeMod.Climb.shed_multiplier()
   local x = G.GAME.last_hand_played and ChallengeMod.Climb.shed_xmult(G.GAME.last_hand_played)
   if not x then return 1 end
 
+  -- No alert here: the Lovely patch announces it with
+  -- card_eval_status_text, the same flash a joker uses for its own Xmult.
   ChallengeMod.Climb.shed_applied = this_hand
-  alert(("shed X%s"):format(tostring(x)),
-    { colour = G.C.MULT, hold = 1.6, force = true })
   return x
 end
