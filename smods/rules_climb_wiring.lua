@@ -2,19 +2,36 @@
 -- game. The comparison itself lives in smods/rules_climb.lua.
 local Climb = ChallengeMod.Climb
 
-local function alert(text)
-  if not (G.E_MANAGER and attention_text) then return end
+-- One alert at a time. Selection-change alerts fire faster than an
+-- attention_text holds, so several used to sit on top of each other at the
+-- same offset and become unreadable. This keeps a short hold and refuses to
+-- queue another while one is still up.
+local alert_until = 0
+
+local function alert(text, opts)
+  if not (G.E_MANAGER and attention_text and love and love.timer) then return end
+  opts = opts or {}
+
+  local now = love.timer.getTime()
+  local hold = opts.hold or 0.9
+  -- force jumps the queue for committed actions (a failed play, a pass, the
+  -- shed payout) but still extends the window, so two forced alerts in quick
+  -- succession do not stack.
+  if not opts.force and now < alert_until then return end
+  alert_until = math.max(alert_until, now) + hold
+
   G.E_MANAGER:add_event(Event({
     trigger = "immediate",
     func = function()
       attention_text({
         text = text,
-        scale = 0.7,
-        hold = 2,
+        scale = 0.6,
+        hold = hold,
         major = G.play or G.hand,
-        backdrop_colour = G.C.RED,
+        backdrop_colour = opts.colour or G.C.RED,
         align = "cm",
-        offset = { x = 0, y = -2.5 },
+        -- Sits below the played-hand area so it does not cover the score.
+        offset = { x = 0, y = opts.y or 1.5 },
         silent = true,
       })
       return true
@@ -55,7 +72,7 @@ function Blind:debuff_hand(cards, hand, handname, check)
           -- Failing clears the trick, so the next hand leads freely. Without
           -- that a bad play would leave the same unbeatable lock in place.
           Climb.clear_lock()
-          alert(why or "does not beat it")
+          alert(why or "does not beat it", { hold = 1.6, force = true })
         end
         return true
       end
@@ -105,7 +122,7 @@ G.FUNCS.discard_cards_from_highlighted = function(e, hook)
       end
     end
     Climb.clear_lock()
-    alert("pass")
+    alert("pass", { colour = G.C.BLUE, hold = 1.2, force = true })
   end
   return ret
 end
@@ -145,6 +162,7 @@ function ChallengeMod.Climb.shed_multiplier()
   if not x then return 1 end
 
   ChallengeMod.Climb.shed_applied = this_hand
-  alert(("shed X%s"):format(tostring(x)))
+  alert(("shed X%s"):format(tostring(x)),
+    { colour = G.C.MULT, y = -2.5, hold = 1.6, force = true })
   return x
 end

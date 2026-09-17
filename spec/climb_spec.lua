@@ -555,3 +555,48 @@ describe("Big 2 sort order", function()
     assert.is_true(nominal(2, "suit") > nominal(14, "suit"))
   end)
 end)
+
+describe("alert rate limiting", function()
+  -- Selection-change hints fire faster than an attention_text holds, so
+  -- several used to sit on top of each other and become unreadable. This
+  -- mirrors the limiter in rules_climb_wiring.lua.
+  local shown, alert_until, now
+
+  local function alert(text, opts)
+    opts = opts or {}
+    local hold = opts.hold or 0.9
+    if not opts.force and now < alert_until then return end
+    alert_until = math.max(alert_until, now) + hold
+    shown = shown + 1
+  end
+
+  before_each(function()
+    shown, alert_until, now = 0, 0, 0
+  end)
+
+  it("shows one hint for a burst of selection changes", function()
+    for _ = 1, 10 do alert("beat 9") end
+    assert.equal(1, shown)
+  end)
+
+  -- A committed action must always be reported, even mid-window.
+  it("lets a forced alert through", function()
+    alert("beat 9")
+    alert("does not beat it", { force = true })
+    assert.equal(2, shown)
+  end)
+
+  it("extends the window so forced alerts do not overlap", function()
+    alert("does not beat it", { hold = 1.6, force = true })
+    local first = alert_until
+    alert("pass", { hold = 1.2, force = true })
+    assert.is_true(alert_until > first)
+  end)
+
+  it("resumes hints once the window passes", function()
+    alert("beat 9")
+    now = alert_until + 0.1
+    alert("beat 9")
+    assert.equal(2, shown)
+  end)
+end)
