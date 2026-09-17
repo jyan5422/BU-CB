@@ -1,0 +1,22 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+# cm_shed_bonus: multiply the finished mult when the hand is emptied.
+#
+# Patched at the final scoring step rather than wrapping mod_mult. mod_mult runs
+# several times per hand -- base mult, post-joker, final step -- so a
+# once-per-hand guard caught the first call and the bonus scaled the BASE mult,
+# with every joker afterwards compounding on top. Here `mult` is the finished
+# total, and `mult` itself is a local so it can only be reached by patching.
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "hand_chips = mod_chips(nu_chip or hand_chips)"
+position = "after"
+payload = """
+mult = mult * ((ChallengeMod and ChallengeMod.Climb and ChallengeMod.Climb.shed_multiplier and ChallengeMod.Climb.shed_multiplier()) or 1)
+"""
+match_indent = true
+overwrite = false

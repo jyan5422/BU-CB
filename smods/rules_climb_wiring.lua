@@ -110,42 +110,41 @@ G.FUNCS.discard_cards_from_highlighted = function(e, hook)
   return ret
 end
 
--- cm_shed_bonus: playing your last card pays an Xmult graded on the hand you
--- go out with, and ends the round.
+-- cm_shed_bonus: emptying your hand pays an Xmult graded on the hand you go
+-- out with.
 --
--- Ending it matters: can_play is gated on #G.hand.highlighted <= 0, so with an
--- empty hand you cannot play at all, only burn discards on passes nothing can
--- follow. The position is already decided, so resolving it is honest rather
--- than making the player click through a loss.
+-- Applied at the final scoring step so it multiplies the finished total. It
+-- used to ride mod_mult, but that runs several times per hand -- base mult,
+-- post-joker, then the final step -- and the once-per-hand guard caught the
+-- first, so the bonus scaled the BASE mult and every joker after it compounded
+-- on top. Hooking the final_scoring_step context instead lands it exactly once,
+-- after all cards and jokers have scored.
+--
+-- Ending the round matters too: can_play is gated on
+-- #G.hand.highlighted <= 0, so with an empty hand the player cannot play at
+-- all, only burn discards on passes nothing can follow. Resolving is honest
+-- about a position already decided.
 --
 -- Deliberately NOT implemented by zeroing card_limit: the game-over check at
 -- functions/state_events.lua:330 fires when card_limit <= 0 AND the hand is
 -- empty, so that would turn the reward into an instant loss. An empty hand
 -- with the limit left alone is safe -- it simply draws nothing.
-local mod_mult_ref = mod_mult
-function mod_mult(_mult)
-  _mult = mod_mult_ref(_mult)
+-- The multiplication itself is a Lovely patch at the final scoring step
+-- (lovely/cm_shed_bonus.toml) because `mult` is a local inside evaluate_play
+-- and cannot be reached from a Lua hook. This exposes the decision so the
+-- patch stays a one-liner.
+function ChallengeMod.Climb.shed_multiplier()
+  if not (G.GAME and G.GAME.modifiers and G.GAME.modifiers.cm_shed_bonus) then return 1 end
+  if not (G.hand and #G.hand.cards == 0) then return 1 end
 
-  -- mod_mult is called several times while scoring one hand -- for the base
-  -- mult, again after jokers, and once more at the final step -- so the bonus
-  -- has to be applied once per hand rather than per call, or it compounds.
-  -- G.GAME.current_round.hands_played identifies the hand.
-  if G.GAME and G.GAME.modifiers and G.GAME.modifiers.cm_shed_bonus
-    and G.hand and G.play
-    and #G.hand.cards == 0 and #G.play.cards > 0
-  then
-    local round = G.GAME.current_round
-    local this_hand = round and round.hands_played
-    if ChallengeMod.Climb.shed_applied ~= this_hand then
-      local handname = G.GAME.last_hand_played
-      local x = handname and ChallengeMod.Climb.shed_xmult(handname)
-      if x then
-        ChallengeMod.Climb.shed_applied = this_hand
-        _mult = _mult * x
-        alert(("shed X%s"):format(tostring(x)))
-      end
-    end
-  end
+  local round = G.GAME.current_round
+  local this_hand = round and round.hands_played
+  if ChallengeMod.Climb.shed_applied == this_hand then return 1 end
 
-  return _mult
+  local x = G.GAME.last_hand_played and ChallengeMod.Climb.shed_xmult(G.GAME.last_hand_played)
+  if not x then return 1 end
+
+  ChallengeMod.Climb.shed_applied = this_hand
+  alert(("shed X%s"):format(tostring(x)))
+  return x
 end
