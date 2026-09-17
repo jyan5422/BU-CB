@@ -1,0 +1,28 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+# cm_no_redraw: an empty hand must end the round.
+#
+# Without this the player is stranded. can_play is gated on
+# #G.hand.highlighted <= 0, so with no cards there is nothing to play, and with
+# no discards there is nothing to pass with either -- the round can neither be
+# played nor ended. Observed in play at 0/13 cards, 1 hand, 0 discards.
+#
+# The game already resolves a round when the score is met OR hands run out, so
+# zeroing hands_left routes an empty hand through that same path: the blind is
+# beaten if the score was reached, and lost if it was not. No new outcome is
+# invented.
+[[patches]]
+[patches.pattern]
+target = "game.lua"
+pattern = "if G.GAME.chips - G.GAME.blind.chips >= 0 or G.GAME.current_round.hands_left < 1 then"
+position = "before"
+payload = """
+if G.GAME.modifiers and G.GAME.modifiers.cm_no_redraw and G.hand and #G.hand.cards == 0 and #G.deck.cards >= 0 then
+  G.GAME.current_round.hands_left = 0
+end
+"""
+match_indent = true
+overwrite = false

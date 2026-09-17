@@ -600,3 +600,34 @@ describe("alert rate limiting", function()
     assert.equal(2, shown)
   end)
 end)
+
+describe("an empty hand ends the round", function()
+  -- Observed in play: 0/13 cards, 1 hand, 0 discards. With no cards there is
+  -- nothing to play, and with no discards nothing to pass with, so the round
+  -- could neither be played nor ended. The design doc called for this and the
+  -- code never did it.
+  local function read(path)
+    local f = assert(io.open(path))
+    local s = f:read("*a")
+    f:close()
+    return s
+  end
+
+  it("zeroes hands_left so the game's own resolution runs", function()
+    local patch = read("lovely/cm_no_redraw_resolve.toml")
+    assert.is_truthy(patch:match("hands_left = 0"),
+      "must end the round when the hand is empty")
+    assert.is_truthy(patch:match("#G%.hand%.cards == 0"),
+      "must key off an empty hand")
+    assert.is_truthy(patch:match("cm_no_redraw"),
+      "must only apply when the no-redraw rule is on")
+  end)
+
+  -- It has to run before the game's check, or the decision is already made.
+  it("runs before the round resolution", function()
+    local patch = read("lovely/cm_no_redraw_resolve.toml")
+    assert.is_truthy(patch:match('position = "before"'))
+    assert.is_truthy(patch:match("G%.GAME%.chips %- G%.GAME%.blind%.chips >= 0"),
+      "anchor moved; it must sit on the round resolution branch")
+  end)
+end)

@@ -27,11 +27,14 @@ local function alert(text, opts)
         text = text,
         scale = 0.6,
         hold = hold,
-        major = G.play or G.hand,
+        -- Centred on the room rather than anchored to a card area: attaching
+        -- to G.play put it over the score, and G.hand put it over the cards.
+        -- G.ROOM_ATTACH is what the game centres its own dialogue on. It is
+        -- nil outside a run, hence the fallback.
+        major = G.ROOM_ATTACH or G.play or G.hand,
         backdrop_colour = opts.colour or G.C.RED,
         align = "cm",
-        -- Sits below the played-hand area so it does not cover the score.
-        offset = { x = 0, y = opts.y or 1.5 },
+        offset = { x = 0, y = opts.y or 0 },
         silent = true,
       })
       return true
@@ -163,6 +166,6 @@ function ChallengeMod.Climb.shed_multiplier()
 
   ChallengeMod.Climb.shed_applied = this_hand
   alert(("shed X%s"):format(tostring(x)),
-    { colour = G.C.MULT, y = -2.5, hold = 1.6, force = true })
+    { colour = G.C.MULT, hold = 1.6, force = true })
   return x
 end
