@@ -166,15 +166,24 @@ function ChallengeMod.Climb.shed_multiplier()
   if not (G.GAME and G.GAME.modifiers and G.GAME.modifiers.cm_shed_bonus) then return 1 end
   if not (G.hand and #G.hand.cards == 0) then return 1 end
 
-  local round = G.GAME.current_round
-  local this_hand = round and round.hands_played
-  if ChallengeMod.Climb.shed_applied == this_hand then return 1 end
+  -- Deliberately NOT guarded per hand. The scoring pass runs more than once
+  -- for the same played hand -- the trace showed it banking 576 with the bonus
+  -- and then 192 without -- and the later value wins. Refusing to re-apply
+  -- meant the un-multiplied score was the one kept. The multiplication is
+  -- idempotent per pass because it scales whatever mult that pass built.
 
   local x = G.GAME.last_hand_played and ChallengeMod.Climb.shed_xmult(G.GAME.last_hand_played)
   if not x then return 1 end
 
-  -- No alert here: the Lovely patch announces it with
-  -- card_eval_status_text, the same flash a joker uses for its own Xmult.
-  ChallengeMod.Climb.shed_applied = this_hand
   return x
+end
+
+--- Should the flash be shown for this hand? The multiplier applies on every
+-- scoring pass, but the announcement should appear only once.
+function ChallengeMod.Climb.shed_announce()
+  local round = G.GAME and G.GAME.current_round
+  local this_hand = round and round.hands_played
+  if ChallengeMod.Climb.shed_announced == this_hand then return false end
+  ChallengeMod.Climb.shed_announced = this_hand
+  return true
 end

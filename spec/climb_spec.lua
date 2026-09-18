@@ -631,3 +631,44 @@ describe("an empty hand ends the round", function()
       "anchor moved; it must sit on the round resolution branch")
   end)
 end)
+
+describe("the shed multiplier applies on every scoring pass", function()
+  -- The trace showed the same played hand banking twice: 576 with the bonus,
+  -- then 192 without. The later value wins, so a guard that refused to
+  -- re-apply meant the un-multiplied score was the one kept.
+  local Climb
+
+  before_each(function()
+    _G.ChallengeMod = {}
+    _G.G = {
+      handlist = HANDLIST,
+      GAME = {
+        modifiers = { cm_shed_bonus = true },
+        current_round = { hands_played = 1 },
+        last_hand_played = "Three of a Kind",
+        round = 1,
+      },
+      hand = { cards = {} },
+    }
+    assert(loadfile("smods/rules_climb.lua"))()
+    Climb = _G.ChallengeMod.Climb
+  end)
+
+  it("returns the same multiplier when asked repeatedly", function()
+    local first = Climb.shed_xmult(G.GAME.last_hand_played)
+    local second = Climb.shed_xmult(G.GAME.last_hand_played)
+    assert.equal(3, first)
+    assert.equal(first, second, "a second scoring pass must get the same bonus")
+  end)
+
+  -- The announcement is the part that must not repeat.
+  it("keeps the announcement separate from the multiplier", function()
+    local f = assert(io.open("smods/rules_climb_wiring.lua"))
+    local src = f:read("*a")
+    f:close()
+    assert.is_truthy(src:match("shed_announce"),
+      "the flash needs its own once-per-hand guard")
+    assert.is_nil(src:match("shed_applied == this_hand"),
+      "the multiplier must not be guarded per hand; the later pass wins")
+  end)
+end)

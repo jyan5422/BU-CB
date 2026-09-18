@@ -48,7 +48,8 @@ if ChallengeMod and ChallengeMod.Climb and ChallengeMod.Climb.shed_multiplier th
         tostring(G.E_MANAGER ~= nil), tostring(card_eval_status_text ~= nil),
         tostring(G.play and #G.play.cards), tostring(G.hand and #G.hand.cards)))
     end
-    if G.E_MANAGER and card_eval_status_text and G.play and G.play.cards[1] then
+    if G.E_MANAGER and card_eval_status_text and G.play and G.play.cards[1]
+      and ChallengeMod.Climb.shed_announce and ChallengeMod.Climb.shed_announce() then
       local _target = G.play.cards[#G.play.cards]
       if ChallengeMod.ShedDebug then
         ChallengeMod.ShedDebug.log(("target in_play=%s hasT=%s"):format(
