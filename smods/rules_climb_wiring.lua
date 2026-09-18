@@ -178,12 +178,21 @@ function ChallengeMod.Climb.shed_multiplier()
   return x
 end
 
---- Should the flash be shown for this hand? The multiplier applies on every
--- scoring pass, but the announcement should appear only once.
+--- Should the flash be shown now? The multiplier applies on every scoring
+-- pass, but the announcement should appear once per played hand.
+--
+-- Keyed on the cards in play rather than hands_played: the passes for one hand
+-- do not share a hands_played value, so keying on that let the first pass
+-- consume the announcement and blocked the one that would have drawn -- the
+-- trace reported "skipped: guard failed" with every dependency present.
+--
+-- Rate limited by time instead, which cannot be fooled by however many passes
+-- the scoring makes.
 function ChallengeMod.Climb.shed_announce()
-  local round = G.GAME and G.GAME.current_round
-  local this_hand = round and round.hands_played
-  if ChallengeMod.Climb.shed_announced == this_hand then return false end
-  ChallengeMod.Climb.shed_announced = this_hand
+  if not (love and love.timer) then return true end
+  local now = love.timer.getTime()
+  local last = ChallengeMod.Climb.shed_announced_at or -1
+  if now - last < 1.5 then return false end
+  ChallengeMod.Climb.shed_announced_at = now
   return true
 end

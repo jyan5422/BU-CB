@@ -1,0 +1,27 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+# Show the shed bonus in the mult preview while cards are selected.
+#
+# The preview sets mult from G.GAME.hands[text].mult, which knows nothing about
+# the bonus, so a selection that would empty the hand showed its ordinary mult
+# and the payout was invisible until after committing.
+#
+# Only the displayed number changes here. The bonus itself is applied during
+# scoring by cm_shed_bonus.toml -- this must not double-count it.
+[[patches]]
+[patches.pattern]
+target = "cardarea.lua"
+pattern = "update_hand_text({immediate = true, nopulse = nil, delay = 0}, {handname=disp_text, level=G.GAME.hands[text].level, mult = G.GAME.hands[text].mult, chips = G.GAME.hands[text].chips})"
+position = "at"
+payload = """
+local _cm_mult = G.GAME.hands[text].mult
+if ChallengeMod and ChallengeMod.Climb and ChallengeMod.Climb.shed_preview_xmult then
+  _cm_mult = _cm_mult * ChallengeMod.Climb.shed_preview_xmult(self, text)
+end
+update_hand_text({immediate = true, nopulse = nil, delay = 0}, {handname=disp_text, level=G.GAME.hands[text].level, mult = _cm_mult, chips = G.GAME.hands[text].chips})
+"""
+match_indent = true
+overwrite = true

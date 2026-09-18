@@ -223,3 +223,18 @@ local SHED_XMULT = {
 function Climb.shed_xmult(handname)
   return handname and SHED_XMULT[handname] or nil
 end
+
+--- Multiplier the mult preview should show for the current selection.
+--
+-- The preview reads G.GAME.hands[name].mult, which knows nothing about the
+-- shed bonus, so a selection that would empty the hand showed its ordinary
+-- mult and the payout only appeared after committing.
+--
+-- Returns 1 unless every card in hand is selected, since that is the condition
+-- the bonus itself checks. Display only -- the bonus is applied during scoring.
+function Climb.shed_preview_xmult(area, handname)
+  if not (G.GAME and G.GAME.modifiers and G.GAME.modifiers.cm_shed_bonus) then return 1 end
+  if not (area and area.highlighted and G.hand) then return 1 end
+  if #G.hand.cards == 0 or #area.highlighted ~= #G.hand.cards then return 1 end
+  return Climb.shed_xmult(handname) or 1
+end
