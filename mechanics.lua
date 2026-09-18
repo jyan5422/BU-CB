@@ -52,6 +52,7 @@ function ChallengeMod.localizeMechDescriptions()
   G.localization.misc.v_text.ch_c_dm_boss_increase = { "Boss Blinds are {C:attention}#1#{} times larger" }
   G.localization.misc.v_text.ch_c_dm_restock_consumeables = { "Buying {C:attention}Tarot Merchant{} or {C:attention}Planet Merchant{} restocks the shop with those cards available." }
   G.localization.misc.v_text.ch_c_dm_last_ante_hand = { "On ante end, you earn {C:money}$#1#{} for every hand not played in the previous ante." }
+  G.localization.misc.v_text.ch_c_dm_double_tag = { "Also gain a {C:attention}Double Tag{} when a blind is skipped" }
   -- Fires from the Bones ability at 25% of the blind: see lovely/dm_baller_bones.toml.
   G.localization.misc.v_text.ch_c_dm_baller_bones = { "Earn {C:money}$#1#{} when a card saves you at {C:attention}25%{} of the blind" }
 end
