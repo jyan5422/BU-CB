@@ -672,3 +672,62 @@ describe("the shed multiplier applies on every scoring pass", function()
       "the multiplier must not be guarded per hand; the later pass wins")
   end)
 end)
+
+-- The reason strings are player-facing UI: they fill the second row of the
+-- game's "Hand will not score" warning, which is otherwise empty on a
+-- non-boss blind. Asserted here because a wording change that reads fine in
+-- isolation can still leave the row saying nothing actionable.
+describe("the reason a selection is illegal", function()
+  before_each(load_module)
+
+  local function why(lock, cards, handname)
+    local ok, reason = Climb.beats(lock, #cards, handname, cards)
+    assert.is_false(ok)
+    return reason
+  end
+
+  it("names the trick size when the count is wrong", function()
+    local lock = { count = 2, handname = "Pair", rank = 5, suit = 1, round = 1 }
+    assert.equal("Climbing 2 cards", why(lock, hand(9), "High Card"))
+  end)
+
+  it("uses the singular for a one-card trick", function()
+    local lock = { count = 1, handname = "High Card", rank = 5, suit = 1, round = 1 }
+    assert.equal("Climbing 1 card", why(lock, hand(9, 9), "Pair"))
+  end)
+
+  it("names the hand to beat when the tier is too low", function()
+    local lock = { count = 5, handname = "Flush", rank = 5, suit = 1, round = 1 }
+    assert.equal("Must beat Flush", why(lock, hand(3, 4, 5, 6, 8), "High Card"))
+  end)
+
+  -- Suit is the tie-break, so the rank alone ("Must beat 7") looks impossible
+  -- to a player holding a 7.
+  it("names rank and suit when the rank is too low", function()
+    local lock = { count = 1, handname = "High Card", rank = Climb.rank_of(card(7)),
+                   suit = 4, round = 1 }
+    assert.equal("Must beat 7 of Spades", why(lock, hand(5), "High Card"))
+  end)
+
+  it("still names a card when the lock has no suit", function()
+    local lock = { count = 1, handname = "High Card", rank = Climb.rank_of(card(7)),
+                   round = 1 }
+    assert.equal("Must beat 7", why(lock, hand(5), "High Card"))
+  end)
+end)
+
+describe("the will-not-score subtext", function()
+  before_each(load_module)
+
+  it("is absent when the selection is legal", function()
+    Climb.last_reason = nil
+    assert.is_nil(Climb.selection_subtext())
+  end)
+
+  -- The escape hatch matters more than the reason: a player who knows the
+  -- hand is wrong still has to learn that discarding clears the trick.
+  it("tells the player how to reset", function()
+    Climb.last_reason = "Must beat Flush"
+    assert.equal("Must beat Flush, discard to reset", Climb.selection_subtext())
+  end)
+end)

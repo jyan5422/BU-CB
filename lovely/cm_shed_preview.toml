@@ -19,7 +19,9 @@ position = "at"
 payload = """
 local _cm_mult = G.GAME.hands[text].mult
 if ChallengeMod and ChallengeMod.Climb and ChallengeMod.Climb.shed_preview_xmult then
-  _cm_mult = _cm_mult * ChallengeMod.Climb.shed_preview_xmult(self, text)
+  local _cm_x = ChallengeMod.Climb.shed_preview_xmult(self, text)
+  _cm_mult = _cm_mult * _cm_x
+  if ChallengeMod.Climb.shed_preview_flash then ChallengeMod.Climb.shed_preview_flash(_cm_x) end
 end
 update_hand_text({immediate = true, nopulse = nil, delay = 0}, {handname=disp_text, level=G.GAME.hands[text].level, mult = _cm_mult, chips = G.GAME.hands[text].chips})
 """

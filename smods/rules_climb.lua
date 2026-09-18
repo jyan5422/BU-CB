@@ -44,8 +44,20 @@ local RANK_LABEL = {
   [13] = "2",
 }
 
+local SUIT_LABEL = {}
+for suit, weight in pairs(SUIT_ORDER) do SUIT_LABEL[weight] = suit end
+
 function Climb.rank_name(weight)
   return weight and RANK_LABEL[weight] or nil
+end
+
+-- Rank and suit together, because suit is the tie-break: against a pair of 7s
+-- "beat 7" looks impossible until you know which 7.
+function Climb.card_name(rank, suit)
+  local r = Climb.rank_name(rank)
+  if not r then return nil end
+  local s = suit and SUIT_LABEL[suit]
+  return s and (r .. " of " .. s) or r
 end
 
 --- Big 2 suit weight of one card, or nil if it has no suit.
@@ -129,15 +141,18 @@ end
 function Climb.beats(lock, count, handname, cards)
   if not lock then return true, "lead" end
 
+  -- Reasons are phrased to stand alone as the on-screen label, so they name
+  -- the requirement rather than the failure: "Climbing 2 cards" tells the
+  -- player what to do next, where "wrong size" only says they were wrong.
   if count ~= lock.count then
-    return false, ("play %d card%s"):format(lock.count, lock.count == 1 and "" or "s")
+    return false, ("Climbing %d card%s"):format(lock.count, lock.count == 1 and "" or "s")
   end
 
   if ranked_by_tier(count) then
     local tier, lock_tier = Climb.hand_tier(handname), Climb.hand_tier(lock.handname)
     if not tier or not lock_tier then return false, "unknown hand" end
     if tier > lock_tier then return true, "beats" end
-    if tier < lock_tier then return false, ("beat %s"):format(tostring(lock.handname)) end
+    if tier < lock_tier then return false, ("Must beat %s"):format(tostring(lock.handname)) end
     -- Same hand type: rank splits the tie, as it does in Big 2.
   end
 
@@ -150,7 +165,7 @@ function Climb.beats(lock, count, handname, cards)
   if above(rank, suit, lock.rank, lock.suit) then return true, "beats" end
   -- Name the card to beat: "too low" leaves the player guessing, and the Big 2
   -- order is the part that surprises people (a 2 outranks everything).
-  return false, ("beat %s"):format(Climb.rank_name(lock.rank) or "the last hand")
+  return false, ("Must beat %s"):format(Climb.card_name(lock.rank, lock.suit) or "the last hand")
 end
 
 -- The lock lives on G.GAME.current_round, but the game does NOT replace that
@@ -237,4 +252,18 @@ function Climb.shed_preview_xmult(area, handname)
   if not (area and area.highlighted and G.hand) then return 1 end
   if #G.hand.cards == 0 or #area.highlighted ~= #G.hand.cards then return 1 end
   return Climb.shed_xmult(handname) or 1
+end
+
+--- Subtext for the game's "Hand will not score" warning: the reason the
+--- selection is illegal, plus the way out.
+---
+--- Fills the second row of that warning, which the base game reserves for
+--- Blind:get_loc_debuff_text and leaves empty on a non-boss blind. Without it
+--- the player is told the hand will not score but never why -- the single most
+--- confusing thing about the rule in playtesting.
+function Climb.selection_subtext()
+  local why = Climb.last_reason
+  if not why then return nil end
+  -- Any discard clears the trick, so "discard to reset" is always the escape.
+  return why .. ", discard to reset"
 end

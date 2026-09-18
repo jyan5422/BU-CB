@@ -8,6 +8,11 @@ local Climb = ChallengeMod.Climb
 -- queue another while one is still up.
 local alert_until = 0
 
+-- Last shed multiplier announced on selection. Declared up here because
+-- debuff_hand resets it when a hand is committed, and a Lua local is not
+-- visible above its declaration.
+local shed_flashed = 1
+
 local function alert(text, opts)
   if not (G.E_MANAGER and attention_text and love and love.timer) then return end
   opts = opts or {}
@@ -56,20 +61,33 @@ function Blind:debuff_hand(cards, hand, handname, check)
     local played = check and G.hand and G.hand.highlighted or cards
     local count = #(played or {})
 
+    -- Deselecting everything tears the warning down, so the reason behind it
+    -- must go too or it would reappear attached to the next illegal hand
+    -- before that hand's own reason is computed.
+    if count == 0 and check then ChallengeMod.Climb.last_reason = nil end
+
     if count > 0 then
       local lock = Climb.get_lock()
       local beats, why = Climb.beats(lock, count, handname, played)
 
       if not beats then
         if check then
-          -- The check pass drives the game's "will not score" label, which says
-          -- only that, not why. Surfacing the reason there would mean patching
-          -- that label's construction, which I could not locate; instead the
-          -- reason is shown as an alert the moment the selection becomes
-          -- illegal, so it appears before the hand is committed.
+          -- The check pass is what sets G.boss_throw_hand, so the game's
+          -- "Hand will not score" warning is already on screen. Its second row
+          -- renders Blind:get_loc_debuff_text, which is '' on a non-boss
+          -- blind -- an empty slot the reason fits exactly. Hooking that
+          -- (below) beats a transient flash: it stays up as long as the
+          -- illegal selection does.
           if ChallengeMod.Climb.last_reason ~= why then
             ChallengeMod.Climb.last_reason = why
-            alert(why)
+            -- The warning's DynaText is built once and cached, so a reason
+            -- that changes while it is up would keep the stale text. Dropping
+            -- the box makes Game:update rebuild it next frame -- the same
+            -- call the game makes when the selection becomes legal.
+            if G.boss_warning_text then
+              G.boss_warning_text:remove()
+              G.boss_warning_text = nil
+            end
           end
         else
           -- Failing clears the trick, so the next hand leads freely. Without
@@ -84,6 +102,8 @@ function Blind:debuff_hand(cards, hand, handname, check)
 
       if not check then
         local continued = lock ~= nil
+        ChallengeMod.Climb.last_reason = nil
+        shed_flashed = 1
         Climb.set_lock(count, handname, played)
         -- Holding the trick means you never had to pass, so the pass comes
         -- back. Discards buy passes and joker triggers, never score, so this
@@ -99,6 +119,37 @@ function Blind:debuff_hand(cards, hand, handname, check)
   end
 
   return debuff_hand_ref(self, cards, hand, handname, check)
+end
+
+-- The second row of the "Hand will not score" warning. Appending rather than
+-- replacing, so a boss with its own debuff text keeps it -- both reasons can
+-- apply to the same hand and hiding one would send the player chasing the
+-- wrong fix.
+local get_loc_debuff_text_ref = Blind.get_loc_debuff_text
+function Blind:get_loc_debuff_text()
+  local base = get_loc_debuff_text_ref(self)
+  if not Climb.active() then return base end
+
+  local subtext = Climb.selection_subtext()
+  if not subtext then return base end
+  if base and base ~= "" then return base .. " - " .. subtext end
+  return subtext
+end
+
+-- Shed bonus on selection. The preview mult already includes it
+-- (lovely/cm_shed_preview.toml), but a number quietly doubling is easy to
+-- miss, so name it once when the selection starts qualifying.
+--
+-- Keyed on the value rather than rate limited: selecting the last card is a
+-- deliberate act and deserves the flash every time it happens, while the
+-- preview refreshes far too often to announce on each call.
+function ChallengeMod.Climb.shed_preview_flash(x)
+  x = x or 1
+  if x == shed_flashed then return end
+  shed_flashed = x
+  if x > 1 then
+    alert(("X%s Shed"):format(x), { colour = G.C.MULT, hold = 1.1, force = true })
+  end
 end
 
 -- Any discard is a pass: it clears the trick, whether or not cards were
