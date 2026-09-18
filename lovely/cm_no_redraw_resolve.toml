@@ -22,6 +22,12 @@ position = "before"
 payload = """
 if G.GAME.modifiers and G.GAME.modifiers.cm_no_redraw and G.hand and #G.hand.cards == 0 and #G.deck.cards >= 0 then
   G.GAME.current_round.hands_left = 0
+  -- Emptying the hand both earns the shed bonus and ends the round, so the
+  -- resolution screen would otherwise cover the bonus flash before it can be
+  -- read. A short beat lets it land first.
+  if G.GAME.modifiers.cm_shed_bonus and G.E_MANAGER and delay then
+    delay(0.8)
+  end
 end
 """
 match_indent = true

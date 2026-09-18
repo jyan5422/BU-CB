@@ -38,6 +38,11 @@ if ChallengeMod and ChallengeMod.Climb and ChallengeMod.Climb.shed_multiplier th
     -- one passed in, which is why nothing appeared. Queued through E_MANAGER so
     -- it lands after the jokers have finished rather than during their
     -- animations.
+    if ChallengeMod.ShedDebug and SMODS and SMODS.Scoring_Parameters then
+      ChallengeMod.ShedDebug.log(("mult local=%s param=%s score=%s"):format(
+        tostring(mult), tostring(SMODS.Scoring_Parameters.mult.current),
+        tostring(SMODS.calculate_round_score and math.floor(SMODS.calculate_round_score()) or "?")))
+    end
     if ChallengeMod.ShedDebug then
       ChallengeMod.ShedDebug.log(("em=%s fn=%s play=%s hand=%s"):format(
         tostring(G.E_MANAGER ~= nil), tostring(card_eval_status_text ~= nil),
@@ -49,9 +54,11 @@ if ChallengeMod and ChallengeMod.Climb and ChallengeMod.Climb.shed_multiplier th
         ChallengeMod.ShedDebug.log(("target in_play=%s hasT=%s"):format(
           tostring(_target.area == G.play), tostring(_target.T ~= nil)))
       end
+      -- Immediate, not delayed. Emptying the hand ends the round, so the
+      -- resolution screen follows at once and a delayed flash draws behind it
+      -- -- the trace showed it firing successfully while nothing was visible.
       G.E_MANAGER:add_event(Event({
-        trigger = 'after',
-        delay = 0.3,
+        trigger = 'immediate',
         func = function()
           local _ok, _err = pcall(function()
             card_eval_status_text(_target, 'extra', nil, nil, nil,
