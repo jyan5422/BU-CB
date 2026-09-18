@@ -80,3 +80,22 @@ end
 """
 match_indent = true
 overwrite = false
+
+# Diagnostic: report the parameter again just before the score is banked, to
+# see whether it still holds the doubled value. The trace shows param=4 at the
+# moment of writing but Best Hand records half, so something between the two
+# resets it.
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "check_and_set_high_score('hand',  SMODS.calculate_round_score() )"
+position = "before"
+payload = """
+if ChallengeMod and ChallengeMod.ShedDebug and SMODS and SMODS.Scoring_Parameters then
+  ChallengeMod.ShedDebug.log(("at bank: param=%s score=%s"):format(
+    tostring(SMODS.Scoring_Parameters.mult.current),
+    tostring(math.floor(SMODS.calculate_round_score()))))
+end
+"""
+match_indent = true
+overwrite = false
