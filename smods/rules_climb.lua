@@ -125,11 +125,17 @@ function Climb.hand_tier(handname)
   return nil
 end
 
--- Big 2 compares singles, pairs and triples by rank, and five-card hands by
--- which hand they are. Four-card plays are not a Big 2 shape but Balatro
--- offers them, so they get their own bucket, ranked the same way as fives.
+-- Hand type is compared at EVERY count, then rank breaks a tie.
+--
+-- An earlier version only compared type at 4+ cards, on the reasoning that
+-- Big 2 ranks pairs and triples by rank alone. That is true only because Big 2
+-- has no *illegal* two-card play -- two cards there are always a pair. Balatro
+-- will happily play any two cards, so skipping the type check let King-3
+-- ("High Card") beat a pair of 7s on the king's rank, and three junk cards
+-- beat a triple. Comparing type first rejects those, and for two genuine pairs
+-- the tiers are equal and it falls through to rank exactly as before.
 local function ranked_by_tier(count)
-  return count >= 4
+  return count >= 1
 end
 
 --- Does a play beat the locked trick?
@@ -264,6 +270,13 @@ end
 function Climb.selection_subtext()
   local why = Climb.last_reason
   if not why then return nil end
+  -- Only while that warning is actually up. get_loc_debuff_text is also called
+  -- by Blind:alert_debuff when a boss blind starts, and a reason left over
+  -- from the previous round would be appended to the boss's own text there --
+  -- advice about a climb the player has not begun. G.boss_throw_hand is set
+  -- and cleared per selection by the game itself, so it is exactly the flag
+  -- that says the warning is showing.
+  if not (G and G.boss_throw_hand) then return nil end
   -- Any discard clears the trick, so "discard to reset" is always the escape.
   return why .. ", discard to reset"
 end

@@ -21,7 +21,7 @@ named `cm_climb` rather than anything involving tricks.
 
 ## The modifiers
 
-### 1. `cm_trick_lock` — the core rule
+### 1. `cm_climb` — the core rule
 
 The first hand played in a round fixes the trick's **shape**; every later hand
 that round must match it and beat it. Failing either test throws the hand away
@@ -35,10 +35,18 @@ cases; locking on count lets Balatro's own hand order rank them.
 | lock | to beat it |
 |---|---|
 | 1 card | 1 card, higher rank |
-| 2 cards | 2 cards, higher rank |
-| 3 cards | 3 cards, higher rank |
+| 2 cards | 2 cards, same hand type, higher rank |
+| 3 cards | 3 cards, same hand type, higher rank |
 | 4 cards | 4 cards, stronger hand, rank as tiebreak |
 | 5 cards | 5 cards, stronger hand, rank as tiebreak |
+
+**Hand type is compared at every count**, then rank breaks the tie. Big 2 ranks
+pairs and triples by rank alone, but only because a two-card play there is
+always a pair. Balatro will play any two cards, so comparing rank alone let
+King-3 ("High Card") beat a pair of 7s on the king, and three junk cards beat a
+triple. Found in adversarial review; the specs had only ever compared Pair
+against Pair. A consequence worth knowing: a pair-plus-kicker can lead a
+three-card climb, and a genuine triple then beats it.
 
 Four-card plays are **not legal in Big Two** -- pagat is explicit that a five
 card group is the only multi-card play above a triple -- but Balatro offers
@@ -69,18 +77,25 @@ returns a random negative for them.
 **Tier** comes from `G.handlist`, which the game already orders strongest
 first.
 
-The lock lives on `G.GAME.current_round`, which the game clears each round, so
-it resets per blind for free.
+The lock lives on `G.GAME.current_round`, but the game does **not** replace
+that table between rounds -- it mutates named fields, so a key of our own
+survives into the next round and would reject its first hand. The lock is
+therefore stamped with `G.GAME.round`, a counter the game bumps per blind, and
+treated as stale when the stamp no longer matches. Two earlier attempts got
+this wrong (a custom flag, then `any_hand_drawn`, which `new_round` clears and
+the deal immediately re-sets).
 
 ### 2. `cm_pass` — discard nothing to pass
 
 Discarding with **no cards selected** is allowed: it spends a discard, clears
 the lock, and leaves the hand untouched. Normal discards still work as usual.
 
-Only one gate needs changing, the `#G.hand.highlighted <= 0` condition in
-`G.FUNCS.can_discard` (`functions/button_callbacks.lua`). The discard path
-already handles zero cards — it counts `#cards` generically and spends one
-discard.
+Two places need changing, not one. The gate is the `#G.hand.highlighted <= 0`
+condition in `G.FUNCS.can_discard` (`functions/button_callbacks.lua`). But the
+discard path does **not** already handle zero cards: its whole body sits inside
+`if highlighted_count > 0`, so a zero-card discard was free until the charge
+was added in the wrapper (`ease_discard(-1)` plus the `discards_used` bump).
+Observed in play as a pass that cost nothing.
 
 The pass is the escape valve: without it you could hold 13 cards that cannot
 make the locked shape and cannot afford to discard into a worse position.
@@ -123,7 +138,7 @@ Also via `perma_bonus`, on top of the rank bonus: spades +3, hearts +2,
 clubs +1, diamonds +0. Goes through `Card:is_suit`, so Wild cards behave
 correctly.
 
-An ace of spades scores 18, a three of diamonds 3 — enough spread to steer
+An ace of spades scores 17 (11 base, +3 rank, +3 suit), a three of diamonds 3 — enough spread to steer
 play without swamping the rank bonuses.
 
 These bonuses affect **score only, never comparison**. Comparing by total chips
@@ -138,7 +153,7 @@ it scores.
 it is one line. SMODS composes it with Four Fingers and Shortcut itself
 (`game_object.lua:2913`), so the interaction worry is already handled upstream.
 
-### 6. `cm_trick_refund` — hold the trick, keep the pass
+### 6. `cm_climb_refund` — hold the climb, keep the pass
 
 A successful continuation refunds one discard.
 
@@ -176,9 +191,10 @@ is the hand size, not a new mechanic.
 ### 8. `cm_shed_bonus` — going out pays, by how you go out
 
 Playing your **last** card earns an Xmult graded on the hand you go out with,
-taken from `G.handlist` so it needs no ranking of its own:
-
-
+from an explicit table of hand names. An earlier version derived it from the
+`G.handlist` tier index, which is why the text used to claim it "needs no
+ranking of its own"; the table replaced that because a tier-derived curve was
+finer-grained than a player could read.
 
 Keyed on what the hand **contains**, not Balatro's tier index, so the numbers
 stay small and predictable -- a pair is X2 whether it is a bare pair, two pair
@@ -204,7 +220,11 @@ ideal round is open weak, climb, exit strong.
 The top tiers are close to unreachable, since the exit must also match the
 locked size and beat it, so they are trophies rather than balance concerns.
 
-**Emptying your hand ends the round**, resolving through the existing check: if
+**Emptying your hand ends the round**, resolving through the existing check.
+Implemented under `cm_no_redraw` rather than here, since it is the absence of a
+redraw that makes an empty hand terminal -- a challenge taking the shed bonus
+alone still refills its hand. The patch sits in `Game:update_hand_played`, so
+it can only fire after a hand is played and never before the opening deal: if
 the blind is met you advance, if not you lose. Without this you are stranded --
 `can_play` is gated on `#G.hand.highlighted <= 0`, so with no cards you cannot
 play, only burn discards on passes you can never follow up. Ending it is honest
@@ -230,6 +250,9 @@ empty hand with the limit still at 13 is safe -- it simply draws nothing.
   every played hand to contain 5 cards, so a 1-, 2- or 3-card lock would make
   every legal continuation illegal and the round unwinnable. It runs through the
   same `debuff_hand` seam this challenge uses.
+- **The Eye banned** (`bl_eye`): it forces a different hand type every hand
+  while the climb wants the same shape repeated, which can leave a round
+  unwinnable for the same reason.
 
 ## Decided and rejected
 
@@ -262,11 +285,14 @@ Each should fit on one line, like a joker:
 
 ## Open questions
 
-1. **Button label.** The pass button will still read "Discard", which makes the
-   mechanic hard to discover. Relabelling to "Pass" when nothing is selected
-   may be awkward in the UI code; an `attention_text` popup is the fallback.
-2. **Starting hands and discards.** 4/4 is a starting guess, not a considered
-   number.
+1. **Button label.** The pass button still reads "Discard", which makes the
+   mechanic hard to discover. Partly addressed: the "Hand will not score"
+   warning now carries "..., discard to reset" as its subtext, so the escape is
+   named at the moment the player needs it. Relabelling the button to "Pass"
+   when nothing is selected is still open.
+2. **Starting hands and discards.** Settled at 4 hands and 0 discards
+   (`cm_pass -3` on the base 3) after playtesting; 3 starting discards was too
+   strong. Still a balance guess rather than a tuned number.
 3. **Is 13 enough compensation for no redraw?** Decided yes: 13 cards buys two
    full 5-card plays plus a trailing 3, so a round is 2-3 plays before the hand
    runs dry, and the drawdown is the point rather than a cost. If it plays too

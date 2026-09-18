@@ -720,14 +720,74 @@ describe("the will-not-score subtext", function()
   before_each(load_module)
 
   it("is absent when the selection is legal", function()
+    _G.G.boss_throw_hand = true
     Climb.last_reason = nil
+    assert.is_nil(Climb.selection_subtext())
+  end)
+
+  -- get_loc_debuff_text is also called when a boss blind starts. A reason left
+  -- over from the previous round would be appended to the boss's own text
+  -- there, advising on a climb that has not begun.
+  it("is absent when no warning is on screen", function()
+    _G.G.boss_throw_hand = nil
+    Climb.last_reason = "Must beat Flush"
     assert.is_nil(Climb.selection_subtext())
   end)
 
   -- The escape hatch matters more than the reason: a player who knows the
   -- hand is wrong still has to learn that discarding clears the trick.
   it("tells the player how to reset", function()
+    _G.G.boss_throw_hand = true
     Climb.last_reason = "Must beat Flush"
     assert.equal("Must beat Flush, discard to reset", Climb.selection_subtext())
+  end)
+end)
+
+-- Hand type has to be compared at every count, not just at 4+. Big 2 ranks
+-- pairs by rank alone only because two cards there are always a pair; Balatro
+-- will play any two. The earlier specs only ever compared Pair against Pair,
+-- so nothing caught junk beating a pair on its high card.
+describe("hand type at small counts", function()
+  before_each(load_module)
+
+  local function lock_of(count, handname, id, suit)
+    return { count = count, handname = handname, rank = Climb.rank_of(card(id)),
+             suit = suit or 1, round = 1 }
+  end
+
+  it("does not let two junk cards beat a pair", function()
+    local ok, why = Climb.beats(lock_of(2, "Pair", 7), 2, "High Card",
+      { card(13), card(3) })
+    assert.is_false(ok)
+    assert.equal("Must beat Pair", why)
+  end)
+
+  it("does not let three junk cards beat a triple", function()
+    local ok = Climb.beats(lock_of(3, "Three of a Kind", 9), 3, "High Card",
+      { card(13), card(3), card(4) })
+    assert.is_false(ok)
+  end)
+
+  it("does not let a pair with a kicker beat a triple", function()
+    local ok = Climb.beats(lock_of(3, "Three of a Kind", 9), 3, "Pair",
+      { card(13), card(13), card(4) })
+    assert.is_false(ok)
+  end)
+
+  -- The whole point of the tier check is to not disturb legal play.
+  it("still compares two genuine pairs by rank", function()
+    assert.is_true(Climb.beats(lock_of(2, "Pair", 5), 2, "Pair", hand(7, 7)))
+    assert.is_false(Climb.beats(lock_of(2, "Pair", 9), 2, "Pair", hand(7, 7)))
+  end)
+
+  it("still compares two singles by rank", function()
+    assert.is_true(Climb.beats(lock_of(1, "High Card", 5), 1, "High Card", hand(7)))
+    assert.is_false(Climb.beats(lock_of(1, "High Card", 9), 1, "High Card", hand(7)))
+  end)
+
+  -- A triple beating a pair-plus-kicker is the reward for the type check.
+  it("lets a triple beat a pair with a kicker", function()
+    assert.is_true(Climb.beats(lock_of(3, "Pair", 13), 3, "Three of a Kind",
+      hand(4, 4, 4)))
   end)
 end)
