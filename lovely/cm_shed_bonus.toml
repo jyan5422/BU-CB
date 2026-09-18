@@ -23,9 +23,6 @@ position = "after"
 payload = """
 if ChallengeMod and ChallengeMod.Climb and ChallengeMod.Climb.shed_multiplier then
   local _x = ChallengeMod.Climb.shed_multiplier()
-  if ChallengeMod.ShedDebug then
-    ChallengeMod.ShedDebug.log(("patch ran, x=%s"):format(tostring(_x)))
-  end
   if _x and _x > 1 then
     mult = mult * _x
     -- The score is totalled from SMODS.Scoring_Parameters, not this local, so
@@ -38,23 +35,9 @@ if ChallengeMod and ChallengeMod.Climb and ChallengeMod.Climb.shed_multiplier th
     -- one passed in, which is why nothing appeared. Queued through E_MANAGER so
     -- it lands after the jokers have finished rather than during their
     -- animations.
-    if ChallengeMod.ShedDebug and SMODS and SMODS.Scoring_Parameters then
-      ChallengeMod.ShedDebug.log(("mult local=%s param=%s score=%s"):format(
-        tostring(mult), tostring(SMODS.Scoring_Parameters.mult.current),
-        tostring(SMODS.calculate_round_score and math.floor(SMODS.calculate_round_score()) or "?")))
-    end
-    if ChallengeMod.ShedDebug then
-      ChallengeMod.ShedDebug.log(("em=%s fn=%s play=%s hand=%s"):format(
-        tostring(G.E_MANAGER ~= nil), tostring(card_eval_status_text ~= nil),
-        tostring(G.play and #G.play.cards), tostring(G.hand and #G.hand.cards)))
-    end
     if G.E_MANAGER and card_eval_status_text and G.play and G.play.cards[1]
       and ChallengeMod.Climb.shed_announce and ChallengeMod.Climb.shed_announce() then
       local _target = G.play.cards[#G.play.cards]
-      if ChallengeMod.ShedDebug then
-        ChallengeMod.ShedDebug.log(("target in_play=%s hasT=%s"):format(
-          tostring(_target.area == G.play), tostring(_target.T ~= nil)))
-      end
       -- Immediate, not delayed. Emptying the hand ends the round, so the
       -- resolution screen follows at once and a delayed flash draws behind it
       -- -- the trace showed it firing successfully while nothing was visible.
@@ -65,37 +48,12 @@ if ChallengeMod and ChallengeMod.Climb and ChallengeMod.Climb.shed_multiplier th
             card_eval_status_text(_target, 'extra', nil, nil, nil,
               { message = ('X%s Shed'):format(tostring(_x)), colour = G.C.MULT, instant = true })
           end)
-          if ChallengeMod.ShedDebug then
-            ChallengeMod.ShedDebug.log(("fired ok=%s err=%s"):format(
-              tostring(_ok), tostring(_err)))
-          end
           return true
         end,
       }))
-    elseif ChallengeMod.ShedDebug then
-      ChallengeMod.ShedDebug.log("skipped: guard failed")
     end
     update_hand_text({ delay = 0 }, { mult = mult })
   end
-end
-"""
-match_indent = true
-overwrite = false
-
-# Diagnostic: report the parameter again just before the score is banked, to
-# see whether it still holds the doubled value. The trace shows param=4 at the
-# moment of writing but Best Hand records half, so something between the two
-# resets it.
-[[patches]]
-[patches.pattern]
-target = "functions/state_events.lua"
-pattern = "check_and_set_high_score('hand',  SMODS.calculate_round_score() )"
-position = "before"
-payload = """
-if ChallengeMod and ChallengeMod.ShedDebug and SMODS and SMODS.Scoring_Parameters then
-  ChallengeMod.ShedDebug.log(("at bank: param=%s score=%s"):format(
-    tostring(SMODS.Scoring_Parameters.mult.current),
-    tostring(math.floor(SMODS.calculate_round_score()))))
 end
 """
 match_indent = true

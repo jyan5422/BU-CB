@@ -153,16 +153,7 @@ end
 -- (lovely/cm_shed_bonus.toml) because `mult` is a local inside evaluate_play
 -- and cannot be reached from a Lua hook. This exposes the decision so the
 -- patch stays a one-liner.
--- Set false once the shed bonus is confirmed working. The empty-hand test can
--- only be checked during a real hand, so this reports what it saw.
-ChallengeMod.Climb.SHED_DEBUG = true
-
 function ChallengeMod.Climb.shed_multiplier()
-  if ChallengeMod.Climb.SHED_DEBUG and sendInfoMessage then
-    sendInfoMessage(("SHED: hand=%s play=%s last=%s"):format(
-      tostring(G.hand and #G.hand.cards), tostring(G.play and #G.play.cards),
-      tostring(G.GAME and G.GAME.last_hand_played)), "ChallengeMod")
-  end
   if not (G.GAME and G.GAME.modifiers and G.GAME.modifiers.cm_shed_bonus) then return 1 end
   if not (G.hand and #G.hand.cards == 0) then return 1 end
 

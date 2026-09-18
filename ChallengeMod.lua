@@ -38,8 +38,6 @@ load_file("smods/rules_straights.lua")
 load_file("smods/rules_draw.lua")
 load_file("smods/rules_sort.lua")
 load_file("smods/rules_climb_wiring.lua")
--- Temporary: on-screen trace for the shed flash. Remove with the file.
-load_file("smods/debug_shed.lua")
 
 ChallengeMod.localizeChalNames()
 ChallengeMod.localizeDailyNames()
