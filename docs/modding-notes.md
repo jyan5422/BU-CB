@@ -189,6 +189,13 @@ negative from `Card:get_id()` and must be excluded explicitly.
 - The game-over check fires when `card_limit <= 0` **and** the hand is empty —
   so never express "draws nothing" by zeroing `card_limit`; it turns into an
   instant loss. An empty hand with the limit intact is safe.
+- **An empty hand can be reached by more than one route.** Playing your last
+  cards goes through `Game:update_hand_played`; discarding them does not.
+  `Game:update` flips `SELECTING_HAND` to `DRAW_TO_HAND` whenever the hand is
+  empty and the deck is not, so a rule that blocks draws turns that into a
+  **livelock** -- it flips back and forth forever, no buttons render, the HUD
+  freezes at its last values, and it looks exactly like a hang. Handle every
+  route into the state, not just the one you were thinking about.
 - Ending a round early: zero `hands_left` and let the existing resolution
   handle win or loss. The hook in `Game:update_hand_played` can only fire after
   a hand is played, so it cannot pre-empt the opening deal.

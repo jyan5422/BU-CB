@@ -1,0 +1,39 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+# cm_no_redraw: an empty hand that can never be refilled must end the round,
+# from SELECTING_HAND as well as after a played hand.
+#
+# Game:update flips SELECTING_HAND to DRAW_TO_HAND whenever the hand is empty
+# and the deck is not. Under cm_no_redraw that draw yields nothing, so the
+# state goes straight back to SELECTING_HAND and flips again -- a livelock, not
+# a freeze: no buttons render, the HUD keeps its last values, and the game
+# looks hung. Observed in play at 0/13 cards with the deck at 39/52.
+#
+# cm_no_redraw_resolve.toml already ends the round on an empty hand, but it
+# sits in Game:update_hand_played, so it only covers emptying the hand by
+# PLAYING. Emptying it with a discard never reaches that code and hits the
+# livelock instead.
+#
+# Routes to HAND_PLAYED rather than resolving here, so the round still ends
+# through the game's own win/loss check -- and through the resolve patch, which
+# does the same hands_left = 0 a moment later. Entering HAND_PLAYED with an
+# empty G.play is safe: update_hand_played only clears buttons and then picks
+# the next state from the score and hands_left.
+[[patches]]
+[patches.pattern]
+target = "game.lua"
+pattern = "if (not G.hand.cards[1]) and G.deck.cards[1] then"
+position = "at"
+payload = """
+if (not G.hand.cards[1]) and G.deck.cards[1]
+  and ChallengeMod and ChallengeMod.Draw and not ChallengeMod.Draw.allow() then
+  G.GAME.current_round.hands_left = 0
+  G.STATE = G.STATES.HAND_PLAYED
+  G.STATE_COMPLETE = false
+elseif (not G.hand.cards[1]) and G.deck.cards[1] then
+"""
+match_indent = true
+overwrite = true

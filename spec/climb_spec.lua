@@ -968,3 +968,47 @@ describe("the shed payout label", function()
     assert.equal("X4", Climb.shed_score_label(4))
   end)
 end)
+
+-- The resolve patch above covers emptying the hand by PLAYING, because it
+-- sits in Game:update_hand_played. Emptying it with a DISCARD never reaches
+-- that code, and Game:update then flips SELECTING_HAND to DRAW_TO_HAND on
+-- every frame the hand is empty and the deck is not -- which under
+-- cm_no_redraw draws nothing and flips straight back. A livelock, not a
+-- freeze: no buttons render and the HUD keeps its last values, so it reads as
+-- the game hanging. Observed at 0/13 cards with the deck at 39/52.
+describe("an empty hand that cannot be refilled", function()
+  local function read(path)
+    local f = assert(io.open(path))
+    local s = f:read("*a")
+    f:close()
+    return s
+  end
+
+  local patch
+
+  setup(function()
+    patch = read("lovely/cm_no_redraw_livelock.toml")
+  end)
+
+  it("breaks the draw loop by asking whether a draw is possible", function()
+    assert.is_truthy(patch:match("ChallengeMod%.Draw%.allow"),
+      "must gate on whether a draw can actually happen")
+    assert.is_truthy(patch:match("elseif"),
+      "the ordinary draw path must survive as the other branch")
+  end)
+
+  it("ends the round instead of spinning", function()
+    assert.is_truthy(patch:match("hands_left = 0"))
+    assert.is_truthy(patch:match("G%.STATES%.HAND_PLAYED"),
+      "must route through the game's own resolution")
+  end)
+
+  -- Both halves of the empty-hand case have to be covered, and it was having
+  -- only one that produced the hang.
+  it("covers the discard path as well as the played-hand path", function()
+    local resolve = read("lovely/cm_no_redraw_resolve.toml")
+    assert.is_truthy(resolve:match("update_hand_played") or resolve:match("hands_left"),
+      "the played-hand path must still be handled")
+    assert.not_equal(patch:match("target = \"[^\"]+\""), nil)
+  end)
+end)

@@ -245,6 +245,22 @@ That makes the shed bonus a real gamble: go out for the Xmult and it had better
 clear the blind, because there is no next hand. Going out early is how you lose
 in Big 2 too.
 
+**Two paths empty the hand, and both must end the round.** Playing your last
+cards goes through `Game:update_hand_played`, where
+`cm_no_redraw_resolve.toml` zeroes `hands_left`. Discarding your last cards
+does not reach that code at all -- and `Game:update` flips `SELECTING_HAND` to
+`DRAW_TO_HAND` on every frame the hand is empty and the deck is not, which
+under this rule draws nothing and flips straight back. That is a **livelock**,
+not a freeze: no buttons render and the HUD keeps its last values, so it reads
+as the game hanging. Observed in play at 0/13 cards with the deck at 39/52.
+`cm_no_redraw_livelock.toml` covers that second path, routing to `HAND_PLAYED`
+so the round still ends through the game's own win/loss check.
+
+Worth recording as a shape, not just a bug: the fix for the *first* path was
+written and verified, and it was correct -- it simply only covered one of two
+ways to reach the same state. "Is there another route to this condition?" is
+the question that would have caught it.
+
 **Do not implement this by zeroing `card_limit`.** The game-over check at
 `functions/state_events.lua:330` fires when `card_limit <= 0` *and* the hand is
 empty, so clearing the limit would turn the reward into an instant loss. An
