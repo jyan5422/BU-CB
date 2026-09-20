@@ -1,0 +1,38 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 100
+
+# Give the climb reason its own row in the "Hand will not score" warning.
+#
+# The warning has two rows: the label, and the blind's own debuff text. The
+# reason was first appended to that second row through
+# Blind:get_loc_debuff_text, which worked but read small -- DynaText shrinks to
+# fit maxw = 9, so a reason joined onto a boss's text rendered smaller than
+# either part alone. Its own row keeps full size.
+#
+# Anchored on SMODS's rewrite of that line, not the vanilla one: SMODS replaces
+# it (smods/lovely/better_calc.toml) to add a refresh func and its own
+# debuff_text override, and this patch runs after. priority = 100 keeps that
+# order explicit rather than relying on the default. If SMODS changes the line,
+# this fails loudly in the Lovely log and the reason simply stops appearing --
+# it cannot corrupt the table.
+#
+# The row carries a refresh func of its own, mirroring SMODS's, so the text
+# follows the selection without the warning box being torn down and rebuilt.
+#
+# The payload closes the second row early and opens a third, so the original
+# closing `}}` below the anchor now closes the third row and the braces balance.
+[[patches]]
+[patches.pattern]
+target = "game.lua"
+pattern = "{n=G.UIT.O, config={func = \"update_blind_debuff_text\", object = DynaText({scale = 0.6, string = SMODS.debuff_text or G.GAME.blind:get_loc_debuff_text(), maxw = 9, colours = {G.C.WHITE},float = true, shadow = true, silent = true, pop_in = 0, pop_in_rate = 6})}},"
+position = "at"
+payload = """
+{n=G.UIT.O, config={func = "update_blind_debuff_text", object = DynaText({scale = 0.6, string = SMODS.debuff_text or G.GAME.blind:get_loc_debuff_text(), maxw = 9, colours = {G.C.WHITE},float = true, shadow = true, silent = true, pop_in = 0, pop_in_rate = 6})}},
+}},
+{n=G.UIT.R, config = {align = 'cm', maxw = 1}, nodes={
+{n=G.UIT.O, config={func = "cm_update_climb_reason", object = DynaText({scale = 0.65, string = '', maxw = 9, colours = {G.C.WHITE},float = true, shadow = true, silent = true, pop_in = 0, pop_in_rate = 6})}},
+"""
+match_indent = true
+overwrite = true

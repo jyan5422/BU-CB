@@ -147,18 +147,17 @@ end
 function Climb.beats(lock, count, handname, cards)
   if not lock then return true, "lead" end
 
-  -- Reasons are phrased to stand alone as the on-screen label, so they name
-  -- the requirement rather than the failure: "Climbing 2 cards" tells the
-  -- player what to do next, where "wrong size" only says they were wrong.
+  -- Reasons are phrased to stand alone as the on-screen label, and all three
+  -- lead with the verb: they name what to do next, not what went wrong.
   if count ~= lock.count then
-    return false, ("Climbing %d card%s"):format(lock.count, lock.count == 1 and "" or "s")
+    return false, ("Climb with %d card%s"):format(lock.count, lock.count == 1 and "" or "s")
   end
 
   if ranked_by_tier(count) then
     local tier, lock_tier = Climb.hand_tier(handname), Climb.hand_tier(lock.handname)
     if not tier or not lock_tier then return false, "unknown hand" end
     if tier > lock_tier then return true, "beats" end
-    if tier < lock_tier then return false, ("Must beat %s"):format(tostring(lock.handname)) end
+    if tier < lock_tier then return false, ("Climb over %s"):format(tostring(lock.handname)) end
     -- Same hand type: rank splits the tie, as it does in Big 2.
   end
 
@@ -171,14 +170,13 @@ function Climb.beats(lock, count, handname, cards)
   if above(rank, suit, lock.rank, lock.suit) then return true, "beats" end
   -- Name the card to beat: "too low" leaves the player guessing, and the Big 2
   -- order is the part that surprises people (a 2 outranks everything).
-  return false, ("Must beat %s"):format(Climb.card_name(lock.rank, lock.suit) or "the last hand")
+  return false, ("Climb over %s"):format(Climb.card_name(lock.rank, lock.suit) or "the last hand")
 end
 
 -- The lock lives on G.GAME.current_round, but the game does NOT replace that
 -- table between rounds -- it mutates named fields, so a key of our own would
 -- survive and block the next round's opening hand. It is therefore stamped
--- with any_hand_drawn, one of the fields the game does clear: a lock recorded
--- while that was set is stale once it goes missing.
+-- with the round number and treated as stale when the stamp no longer matches.
 function Climb.get_lock()
   local round = G.GAME and G.GAME.current_round
   local lock = round and round.cm_climb_state
@@ -263,10 +261,11 @@ end
 --- Subtext for the game's "Hand will not score" warning: the reason the
 --- selection is illegal, plus the way out.
 ---
---- Fills the second row of that warning, which the base game reserves for
---- Blind:get_loc_debuff_text and leaves empty on a non-boss blind. Without it
---- the player is told the hand will not score but never why -- the single most
---- confusing thing about the rule in playtesting.
+--- Rendered as a row of its own, added by lovely/cm_climb_warning_row.toml.
+--- It was first appended to the blind's own debuff text, but DynaText shrinks
+--- to fit maxw = 9, so the joined string came out smaller than either half
+--- would alone. Without any of this the player is told the hand will not score
+--- but never why -- the most confusing thing about the rule in playtesting.
 function Climb.selection_subtext()
   local why = Climb.last_reason
   if not why then return nil end
@@ -277,6 +276,11 @@ function Climb.selection_subtext()
   -- and cleared per selection by the game itself, so it is exactly the flag
   -- that says the warning is showing.
   if not (G and G.boss_throw_hand) then return nil end
-  -- Any discard clears the trick, so "discard to reset" is always the escape.
+  -- Any discard clears the trick, so that is the escape -- but only while one
+  -- is left. With none the hint is advice the player cannot take, so the
+  -- requirement is shown on its own.
+  local round = G.GAME and G.GAME.current_round
+  local discards = round and round.discards_left or 0
+  if discards <= 0 then return why end
   return why .. ", discard to reset"
 end

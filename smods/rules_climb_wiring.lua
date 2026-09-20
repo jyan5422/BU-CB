@@ -78,17 +78,7 @@ function Blind:debuff_hand(cards, hand, handname, check)
           -- blind -- an empty slot the reason fits exactly. Hooking that
           -- (below) beats a transient flash: it stays up as long as the
           -- illegal selection does.
-          if ChallengeMod.Climb.last_reason ~= why then
-            ChallengeMod.Climb.last_reason = why
-            -- The warning's DynaText is built once and cached, so a reason
-            -- that changes while it is up would keep the stale text. Dropping
-            -- the box makes Game:update rebuild it next frame -- the same
-            -- call the game makes when the selection becomes legal.
-            if G.boss_warning_text then
-              G.boss_warning_text:remove()
-              G.boss_warning_text = nil
-            end
-          end
+          ChallengeMod.Climb.last_reason = why
         else
           -- Failing clears the trick, so the next hand leads freely. Without
           -- that a bad play would leave the same unbeatable lock in place.
@@ -121,19 +111,18 @@ function Blind:debuff_hand(cards, hand, handname, check)
   return debuff_hand_ref(self, cards, hand, handname, check)
 end
 
--- The second row of the "Hand will not score" warning. Appending rather than
--- replacing, so a boss with its own debuff text keeps it -- both reasons can
--- apply to the same hand and hiding one would send the player chasing the
--- wrong fix.
-local get_loc_debuff_text_ref = Blind.get_loc_debuff_text
-function Blind:get_loc_debuff_text()
-  local base = get_loc_debuff_text_ref(self)
-  if not Climb.active() then return base end
-
-  local subtext = Climb.selection_subtext()
-  if not subtext then return base end
-  if base and base ~= "" then return base .. " - " .. subtext end
-  return subtext
+-- Keeps the climb reason's own row (lovely/cm_climb_warning_row.toml) in step
+-- with the selection. Mirrors SMODS's update_blind_debuff_text: a DynaText
+-- caches its string, so without a refresh func the row would keep whichever
+-- reason was current when the warning box was built.
+G.FUNCS.cm_update_climb_reason = function(e)
+  if not e.config.object then return end
+  local new_str = Climb.selection_subtext() or ""
+  if new_str ~= e.config.object.string then
+    e.config.object.config.string = { new_str }
+    e.config.object:update_text(true)
+    e.UIBox:recalculate()
+  end
 end
 
 -- Shed bonus on selection. The preview mult already includes it

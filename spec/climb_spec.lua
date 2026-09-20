@@ -694,36 +694,39 @@ describe("the reason a selection is illegal", function()
 
   it("names the trick size when the count is wrong", function()
     local lock = { count = 2, handname = "Pair", rank = 5, suit = 1, round = 1 }
-    assert.equal("Climbing 2 cards", why(lock, hand(9), "High Card"))
+    assert.equal("Climb with 2 cards", why(lock, hand(9), "High Card"))
   end)
 
   it("uses the singular for a one-card trick", function()
     local lock = { count = 1, handname = "High Card", rank = 5, suit = 1, round = 1 }
-    assert.equal("Climbing 1 card", why(lock, hand(9, 9), "Pair"))
+    assert.equal("Climb with 1 card", why(lock, hand(9, 9), "Pair"))
   end)
 
   it("names the hand to beat when the tier is too low", function()
     local lock = { count = 5, handname = "Flush", rank = 5, suit = 1, round = 1 }
-    assert.equal("Must beat Flush", why(lock, hand(3, 4, 5, 6, 8), "High Card"))
+    assert.equal("Climb over Flush", why(lock, hand(3, 4, 5, 6, 8), "High Card"))
   end)
 
-  -- Suit is the tie-break, so the rank alone ("Must beat 7") looks impossible
+  -- Suit is the tie-break, so the rank alone ("Climb over 7") looks impossible
   -- to a player holding a 7.
   it("names rank and suit when the rank is too low", function()
     local lock = { count = 1, handname = "High Card", rank = Climb.rank_of(card(7)),
                    suit = 4, round = 1 }
-    assert.equal("Must beat 7 of Spades", why(lock, hand(5), "High Card"))
+    assert.equal("Climb over 7 of Spades", why(lock, hand(5), "High Card"))
   end)
 
   it("still names a card when the lock has no suit", function()
     local lock = { count = 1, handname = "High Card", rank = Climb.rank_of(card(7)),
                    round = 1 }
-    assert.equal("Must beat 7", why(lock, hand(5), "High Card"))
+    assert.equal("Climb over 7", why(lock, hand(5), "High Card"))
   end)
 end)
 
 describe("the will-not-score subtext", function()
-  before_each(load_module)
+  before_each(function()
+    load_module()
+    _G.G.GAME = { current_round = { discards_left = 3 } }
+  end)
 
   it("is absent when the selection is legal", function()
     _G.G.boss_throw_hand = true
@@ -736,7 +739,7 @@ describe("the will-not-score subtext", function()
   -- there, advising on a climb that has not begun.
   it("is absent when no warning is on screen", function()
     _G.G.boss_throw_hand = nil
-    Climb.last_reason = "Must beat Flush"
+    Climb.last_reason = "Climb over Flush"
     assert.is_nil(Climb.selection_subtext())
   end)
 
@@ -744,8 +747,17 @@ describe("the will-not-score subtext", function()
   -- hand is wrong still has to learn that discarding clears the trick.
   it("tells the player how to reset", function()
     _G.G.boss_throw_hand = true
-    Climb.last_reason = "Must beat Flush"
-    assert.equal("Must beat Flush, discard to reset", Climb.selection_subtext())
+    Climb.last_reason = "Climb over Flush"
+    assert.equal("Climb over Flush, discard to reset", Climb.selection_subtext())
+  end)
+
+  -- Observed in play at 0 discards: the hint named an escape the player could
+  -- not take.
+  it("drops the reset hint when no discard is left", function()
+    _G.G.boss_throw_hand = true
+    _G.G.GAME.current_round.discards_left = 0
+    Climb.last_reason = "Climb over Flush"
+    assert.equal("Climb over Flush", Climb.selection_subtext())
   end)
 end)
 
@@ -765,7 +777,7 @@ describe("hand type at small counts", function()
     local ok, why = Climb.beats(lock_of(2, "Pair", 7), 2, "High Card",
       { card(13), card(3) })
     assert.is_false(ok)
-    assert.equal("Must beat Pair", why)
+    assert.equal("Climb over Pair", why)
   end)
 
   it("does not let three junk cards beat a triple", function()
