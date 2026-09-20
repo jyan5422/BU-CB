@@ -268,6 +268,15 @@ problem, so dropping the refund closes both without any anti-abuse rule.
 
 If revisited: cap the refunds, or exclude 1-card locks from earning one.
 
+**Sorting the 2 has an upper bound as well as a lower one.** `cm_rank_chips`
+also moves the 2 in `Card:get_nominal` so the hand reads in Big 2 order.
+Sorting by suit passes `mult = 10000` and `suit_nominal` steps by 0.01, so each
+suit owns a band 100 wide and ranks fill [30, 110] of it. A replacement nominal
+above 12 pushes the 2 past the next band's floor and it sorts into the
+neighbouring suit -- seen in play as a 2 of hearts among the spades. 11.5
+clears the ace's 11 and stays in the band. The spec stub had hardcoded a single
+suit, so no test could have caught it.
+
 **Inverted rank order for scoring — rejected.** Making 2 genuinely outrank
 everything in Balatro's internals would fight `evaluate_poker_hand`, straight
 detection and every rank-reading joker. `cm_rank_chips` gets the same feeling

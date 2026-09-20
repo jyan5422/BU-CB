@@ -16,11 +16,19 @@ local get_nominal_ref = Card.get_nominal
 -- is 11. The 2 is the one card whose printed value puts it at the wrong end.
 --
 -- The target is a NOMINAL, not a sort value: get_nominal returns
--- 10*nominal + suit terms + 10*face_nominal, so a shift has to be scaled by
--- the same 10 or it disappears against the suit contribution. An earlier
--- version added 13 to the result, which left a 2 on 37 against an ace on 118.
+-- 10*nominal + suit_nominal*mult + 10*face_nominal, so a shift has to be
+-- scaled by the same 10 or it disappears against the suit contribution. An
+-- earlier version added 13 to the result, which left a 2 on 37 against an
+-- ace on 118.
+--
+-- The value has an UPPER bound as well as a lower one. Sorting by suit passes
+-- mult = 10000, and suit_nominal steps by 0.01 per suit, so each suit occupies
+-- a band 100 wide. Ranks fill [30, 110] of their band (a 3 up to an ace), so a
+-- replacement above 12 pushes the 2 past the next band's floor and it sorts
+-- into the neighbouring suit -- observed as a 2 of hearts sitting among the
+-- spades. 11.5 clears the ace's 11 and stays inside the band.
 local BIG_TWO_NOMINAL = {
-  [2] = 16, -- clear of the ace's 11 even with suit and face terms
+  [2] = 11.5,
 }
 
 function Card:get_nominal(mod)

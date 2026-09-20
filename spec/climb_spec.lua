@@ -515,22 +515,28 @@ describe("Big 2 sort order", function()
       [5] = 5, [10] = 10, [11] = 10, [12] = 10, [13] = 10, [14] = 11, [2] = 2,
     }
     local FACE = { [11] = 0.1, [12] = 0.2, [13] = 0.3, [14] = 0.4 }
+    -- suit_nominal steps by 0.01 per suit and sorting by suit scales it by
+    -- 10000, so each suit owns a band 100 wide. The stub used to hardcode one
+    -- suit, which is why a shift big enough to cross a band went unnoticed.
+    local SUIT_NOMINAL = { Diamonds = 0.01, Clubs = 0.02, Hearts = 0.03, Spades = 0.04 }
     _G.SMODS = { has_no_rank = function() return false end }
     _G.Card = {
       get_nominal = function(self, mod)
         local n = NOMINAL[self.base.id] or 0
-        local suit = mod == "suit" and 4 * 10000 or 4
-        return 10 * n + suit + 10 * (FACE[self.base.id] or 0)
+        local mult = mod == "suit" and 10000 or 1
+        return 10 * n + (SUIT_NOMINAL[self.base.suit] or 0.04) * mult
+          + 10 * (FACE[self.base.id] or 0)
       end,
     }
     assert(loadfile("smods/rules_sort.lua"))()
-    nominal = function(id, mod)
-      return _G.Card.get_nominal({ base = { id = id, nominal = NOMINAL_FOR[id] } }, mod)
+    nominal = function(id, mod, suit)
+      return _G.Card.get_nominal(
+        { base = { id = id, nominal = NOMINAL_FOR[id], suit = suit or "Spades" } }, mod)
     end
   end)
 
   it("leaves the order alone when off", function()
-    assert.equal(24, nominal(2))
+    assert.equal(20.04, nominal(2))
   end)
 
   -- The mistake this fixes: a 2 sitting next to the 3s, so it reads as the
@@ -789,5 +795,59 @@ describe("hand type at small counts", function()
   it("lets a triple beat a pair with a kicker", function()
     assert.is_true(Climb.beats(lock_of(3, "Pair", 13), 3, "Three of a Kind",
       hand(4, 4, 4)))
+  end)
+end)
+
+-- Sorting by suit is a separate mode with a much tighter budget: suit_nominal
+-- steps by 0.01 and is scaled by 10000, so each suit owns a band 100 wide and
+-- the boosted 2 has to stay inside its own band. It did not -- a 2 of hearts
+-- sorted into the spades. The old stub hardcoded a single suit, so no spec
+-- could have caught it.
+describe("Big 2 sort order, by suit", function()
+  local nominal
+
+  before_each(function()
+    _G.ChallengeMod = {}
+    _G.G = { handlist = HANDLIST, GAME = { modifiers = { cm_rank_chips = true } } }
+    local NOMINAL = {
+      [3] = 3, [5] = 5, [10] = 10, [11] = 10, [12] = 10, [13] = 10, [14] = 11, [2] = 2,
+    }
+    local FACE = { [11] = 0.1, [12] = 0.2, [13] = 0.3, [14] = 0.4 }
+    local SUIT_NOMINAL = { Diamonds = 0.01, Clubs = 0.02, Hearts = 0.03, Spades = 0.04 }
+    _G.SMODS = { has_no_rank = function() return false end }
+    _G.Card = {
+      get_nominal = function(self, mod)
+        local n = NOMINAL[self.base.id] or 0
+        local mult = mod == "suit" and 10000 or 1
+        return 10 * n + (SUIT_NOMINAL[self.base.suit] or 0) * mult
+          + 10 * (FACE[self.base.id] or 0)
+      end,
+    }
+    assert(loadfile("smods/rules_sort.lua"))()
+    nominal = function(id, suit)
+      return _G.Card.get_nominal({ base = { id = id, nominal = NOMINAL[id], suit = suit } }, "suit")
+    end
+  end)
+
+  -- The reported bug, as its own assertion.
+  it("keeps a 2 below the lowest card of the suit above it", function()
+    assert.is_true(nominal(2, "Hearts") < nominal(3, "Spades"))
+  end)
+
+  it("keeps every suit in one block", function()
+    local order = { "Diamonds", "Clubs", "Hearts", "Spades" }
+    for i = 1, #order - 1 do
+      local lower, upper = order[i], order[i + 1]
+      -- The 2 is the top of its suit, so it is the card that can leak upward.
+      assert.is_true(nominal(2, lower) < nominal(3, upper),
+        "a 2 of " .. lower .. " must stay below a 3 of " .. upper)
+    end
+  end)
+
+  it("still makes the 2 the highest card within its own suit", function()
+    for _, id in ipairs({ 3, 5, 10, 11, 12, 13, 14 }) do
+      assert.is_true(nominal(2, "Hearts") > nominal(id, "Hearts"),
+        "the 2 should outrank " .. id .. " in the same suit")
+    end
   end)
 end)
