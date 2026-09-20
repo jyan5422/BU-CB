@@ -56,7 +56,7 @@ In order, cheapest first:
 balatro-run /path/to/staged/mod      # launches the real game, regenerates the dump
 grep "no matches" <log> | grep -v smods/lovely   # YOUR failed patches
 grep <payload> ~/.local/share/love/Mods/lovely/dump/<file>  # did it land?
-./push_to_phone.sh                   # device
+./taildrop.sh [host]                 # device (default: phone)
 ```
 
 - A failed Lovely pattern is a `WARN` in the log and **otherwise silent**. It

@@ -79,7 +79,7 @@ Each challenge in `Challenges/` returns a table with:
 ```sh
 ./run_tests.sh          # busted specs (Lua 5.1)
 balatro-run <dir>       # launch the real game against a staged copy of the mod
-./push_to_phone.sh      # build a FLAT zip and taildrop it to the phone
+./taildrop.sh [host]    # build a FLAT zip and taildrop it (default: phone)
 ```
 
 Verify in that order, then on device. A failed Lovely patch is only a `WARN` in
