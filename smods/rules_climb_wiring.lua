@@ -178,10 +178,11 @@ function ChallengeMod.Climb.shed_preview_flash(x)
   if x == shed_flashed then return end
   shed_flashed = x
   if x > 1 then
-    alert(Climb.shed_label(x), {
-      colour = G.C.MULT, hold = 1.1, force = true,
-      sound = "multhit2", pitch = 0.96, volume = 0.7,
-    })
+    -- No sound here. The Xmult sound marks the payout actually happening;
+    -- firing it while the player is still hovering a selection makes a
+    -- prediction sound like a scoring event, and it repeats every time the
+    -- selection changes.
+    alert(Climb.shed_label(x), { colour = G.C.MULT, hold = 1.1, force = true })
   end
 end
 
