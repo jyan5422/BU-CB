@@ -125,7 +125,7 @@ Applied through `perma_bonus`, the same field Hiker uses, which
 | K | 10 | 13 | +3 |
 | A | 11 | 14 | +3 |
 
-Chips match the rank order exactly, so the highest card is also the
+Chips match the rank order exactly, so the highest rank is also the
 highest-scoring one. An earlier draft had A 15 and 2 14, which scored the ace
 above the 2 while the 2 outranked it.
 
@@ -320,7 +320,7 @@ Each should fit on one line, like a joker:
 In the order they appear, which runs from the rule that defines the challenge
 down to the resources it hands you:
 
-- 2 is the highest card.
+- 2 is the highest rank.
 - Spades > hearts > clubs > diamonds. *(each suit in its own colour)*
 - Shed your cards for up to X4.
 - Straights may wrap around.
@@ -330,7 +330,10 @@ down to the resources it hands you:
 
 The two card-order rules lead, because they rewrite what the player already
 knows about a deck and nothing below them reads correctly until they have
-landed. The climb rule sits last, next to the discard line -- the one other
+landed. Together they state the Big 2 order exactly: **rank** first, suit as
+the tie-break. "Highest rank" rather than "highest card" is deliberate -- the
+highest *card* is the 2 of spades specifically, since suit splits equal ranks,
+and "rank" also echoes the climb rule's "higher rank". The climb rule sits last, next to the discard line -- the one other
 place the word "climb" appears -- so the two are read together.
 
 The hand-size and discard lines sit last and next to each other: both are

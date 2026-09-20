@@ -15,7 +15,7 @@ function ChallengeMod.localizeMechDescriptions()
   G.localization.misc.v_text.ch_c_cm_pass = { "{C:red}#1#{} discards, earns a {C:red}discard{} by {C:attention}climbing{}" }
   G.localization.misc.v_text.ch_c_cm_climb_refund = { "Each {C:attention}climb{} earns a {C:red}discard{}" }
   G.localization.misc.v_text.ch_c_cm_shed_bonus = { "{C:attention}Shed{} your cards for up to {X:mult,C:white}X4{}" }
-  G.localization.misc.v_text.ch_c_cm_rank_chips = { "{C:attention}2{} is the highest card" }
+  G.localization.misc.v_text.ch_c_cm_rank_chips = { "{C:attention}2{} is the highest rank" }
   G.localization.misc.v_text.ch_c_cm_suit_chips = { "{C:spades}Spades{} > {C:hearts}hearts{} > {C:clubs}clubs{} > {C:diamonds}diamonds{}" }
   G.localization.misc.v_text.ch_c_cm_wrap_straights = { "{C:attention}Straights{} may wrap around" }
   G.localization.misc.v_text.ch_c_cm_no_redraw = { "{C:attention}+#1#{} hand size, dealt once per round" }

@@ -11,7 +11,7 @@ local Chips = ChallengeMod.Chips
 -- version had A 15 and 2 14, which scored the ace above the 2 while the 2
 -- outranks it -- chips and rank disagreeing on the top card.
 local RANK_BONUS = {
-  [2] = 13, -- 2 -> 15, the highest card in both rank and chips
+  [2] = 13, -- 2 -> 15, the highest rank and the highest chip value
   [11] = 1, -- J -> 11
   [12] = 2, -- Q -> 12
   [13] = 3, -- K -> 13

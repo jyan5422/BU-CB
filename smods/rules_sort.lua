@@ -7,7 +7,7 @@
 --
 -- Rides Card:get_nominal, which CardArea:sort compares. Note that get_highest
 -- also uses it to pick the High Card scorer, so under this rule a 2 scores as
--- the high card over an ace. That follows from 2 being the highest card and is
+-- the high card over an ace. That follows from 2 being the highest rank and is
 -- intended, but it is a real scoring change, not only a cosmetic one.
 local get_nominal_ref = Card.get_nominal
 
