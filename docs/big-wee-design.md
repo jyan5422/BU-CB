@@ -156,8 +156,8 @@ it is one line. SMODS composes it with Four Fingers and Shortcut itself
 ### 6. `cm_climb_refund` — hold the climb, keep the pass
 
 Turned on by a negative `cm_pass` value rather than listed separately, so the
-risk and the reward read as **one** rule to the player: "-3 discards, but earns
-a discard by climbing". It stays a modifier of its own so a joker or another
+risk and the reward read as **one** rule to the player: "-2 discards, earns a
+discard by climbing". It stays a modifier of its own so a joker or another
 challenge can take the reward without the penalty.
 
 A successful continuation refunds one discard.
