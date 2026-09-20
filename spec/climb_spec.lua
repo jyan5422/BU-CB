@@ -904,3 +904,44 @@ describe("alert placement", function()
     assert.equal(-3, Climb.alert_placement({ over_play = true, y = -3 }).y)
   end)
 end)
+
+-- The shed preview had no specs at all, which is how it came to advertise a
+-- bonus on a hand that could not score.
+describe("the shed bonus preview", function()
+  local area
+
+  before_each(function()
+    load_module()
+    _G.G.GAME = { modifiers = { cm_shed_bonus = true } }
+    -- Highlighted cards stay in hand.cards while selected, so "all selected"
+    -- is the two counts being equal.
+    _G.G.hand = { cards = { 1, 2, 3 } }
+    area = { highlighted = { 1, 2, 3 } }
+  end)
+
+  it("shows the bonus when the selection empties the hand", function()
+    assert.equal(3, Climb.shed_preview_xmult(area, "Three of a Kind"))
+  end)
+
+  it("shows nothing while cards would be left behind", function()
+    area.highlighted = { 1, 2 }
+    assert.equal(1, Climb.shed_preview_xmult(area, "Three of a Kind"))
+  end)
+
+  -- The reported bug: "Hand will not score / Climb with 5 cards" above a
+  -- cheerful "X3 Shed". The bonus is never paid on a hand that is thrown
+  -- away, so promising it is a lie the player pays a hand to discover.
+  it("shows nothing when the hand will be thrown away", function()
+    _G.G.boss_throw_hand = true
+    assert.equal(1, Climb.shed_preview_xmult(area, "Three of a Kind"))
+  end)
+
+  it("shows nothing for an exit on junk", function()
+    assert.equal(1, Climb.shed_preview_xmult(area, "High Card"))
+  end)
+
+  it("shows nothing when the rule is off", function()
+    _G.G.GAME.modifiers.cm_shed_bonus = nil
+    assert.equal(1, Climb.shed_preview_xmult(area, "Three of a Kind"))
+  end)
+end)

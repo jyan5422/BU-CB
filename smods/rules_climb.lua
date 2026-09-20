@@ -259,6 +259,15 @@ function Climb.shed_preview_xmult(area, handname)
   if not (G.GAME and G.GAME.modifiers and G.GAME.modifiers.cm_shed_bonus) then return 1 end
   if not (area and area.highlighted and G.hand) then return 1 end
   if #G.hand.cards == 0 or #area.highlighted ~= #G.hand.cards then return 1 end
+  -- A hand that will be thrown away pays nothing, so promising a bonus for it
+  -- is a lie the player spends a hand to discover. Seen in play as
+  -- "Hand will not score / Climb with 5 cards" above a cheerful "X3 Shed".
+  --
+  -- G.boss_throw_hand is the game's own verdict on the current selection, set
+  -- from debuff_hand a few lines earlier in the same parse_highlighted pass --
+  -- so it covers a boss's refusal as well as the climb's, and needs no second
+  -- evaluation of our own.
+  if G.boss_throw_hand then return 1 end
   return Climb.shed_xmult(handname) or 1
 end
 
