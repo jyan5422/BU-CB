@@ -7,16 +7,15 @@ Challenge.VERSION = "0.1.0"
 Challenge.DATA = {
   rules = {
     -- This order is what the player reads in the rules panel: the card order
-    -- first, then how a hand is played, then the resources you get. The
-    -- hand-size and discard lines sit last and together, both being about what
-    -- you start a round holding.
+    -- first, then scoring, then the resources you get, and the climb rule
+    -- last -- next to the discard line, which is the one other place the word
+    -- "climb" appears, so the two are read together.
     custom = {
       -- The two card-order rules lead: they rewrite what the player already
       -- knows about a deck, and nothing below reads correctly until they have
       -- landed.
       { id = "cm_rank_chips" },
       { id = "cm_suit_chips" },
-      { id = "cm_climb" },
       { id = "cm_shed_bonus" },
       { id = "cm_wrap_straights" },
       -- +5 on the base 8 gives the 13 Big 2 deals, and breathes with any
@@ -28,6 +27,7 @@ Challenge.DATA = {
       -- reward read as one rule rather than two lines the player has to join
       -- up -- which is why it is not listed separately.
       { id = "cm_pass", value = -3 },
+      { id = "cm_climb" },
     },
     modifiers = {
       -- Hand size comes from cm_no_redraw's +5, not a flat value here.

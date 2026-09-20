@@ -322,15 +322,16 @@ down to the resources it hands you:
 
 - 2 is the highest card.
 - Spades > hearts > clubs > diamonds. *(each suit in its own colour)*
-- Climb: same size, higher rank.
 - Shed your cards for up to X4.
 - Straights may wrap around.
 - +5 hand size, dealt once per round.
 - -3 discards, earns a discard by climbing.
+- Climb: same size, higher rank.
 
 The two card-order rules lead, because they rewrite what the player already
 knows about a deck and nothing below them reads correctly until they have
-landed.
+landed. The climb rule sits last, next to the discard line -- the one other
+place the word "climb" appears -- so the two are read together.
 
 The hand-size and discard lines sit last and next to each other: both are
 about what you start a round holding.
