@@ -900,6 +900,9 @@ describe("alert placement", function()
     local p = Climb.alert_placement({ under_play = true })
     assert.equal("bm", p.align)
     assert.is_true(p.y > 0, "a committed message must sit below the play area")
+    -- But only into the gap above the hand. A full unit cleared the play area
+    -- and landed on the hand cards, which sit immediately below it.
+    assert.is_true(p.y < 1, "a committed message must stay off the hand")
   end)
 
   it("lets a caller override the offset", function()
