@@ -228,9 +228,13 @@ end
 local SHED_XMULT = {
   ["Pair"] = 2,
   ["Two Pair"] = 2,
-  ["Flush"] = 2,
   ["Three of a Kind"] = 3,
   ["Straight"] = 3,
+  -- A flush pays X3, not the X2 its lack of a group would suggest. It sits
+  -- above both the straight and the triple in Balatro's own order, so paying
+  -- less than either put a dip in the curve -- and it is harder to assemble
+  -- from a five-card hand than two pair, which was matching it.
+  ["Flush"] = 3,
   ["Full House"] = 3,
   ["Four of a Kind"] = 4,
   ["Straight Flush"] = 4,

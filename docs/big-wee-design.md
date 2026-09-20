@@ -202,12 +202,18 @@ or sitting inside a flush.
 
 | exit hand | Xmult |
 |---|---|
-| Pair, Two Pair, Flush | X2 |
-| Three of a Kind, Straight, Full House | X3 |
+| Pair, Two Pair | X2 |
+| Three of a Kind, Straight, Flush, Full House | X3 |
 | Four of a Kind and above | X4 |
 | High Card | none |
 
-A full house pays X3 for its triple even though it outranks a straight, and
+The payout must never dip as the hand gets stronger. The flush originally paid
+X2, on the reasoning that it contains no group -- but it sits above both the
+straight and the triple in `G.handlist`, so it paid less than two hands it
+beats, and matched two pair while being harder to assemble from five cards.
+A spec now asserts the whole table is non-decreasing in tier order.
+
+A full house pays X3 for its triple even though it outranks a flush, and
 everything from four of a kind up pays X4 -- those are rare enough that
 splitting them further would go unnoticed. An earlier version scaled 1.5 to 6.5
 across all twelve tiers, which was finer-grained than a player could read.
@@ -253,6 +259,25 @@ empty hand with the limit still at 13 is safe -- it simply draws nothing.
 - **The Eye banned** (`bl_eye`): it forces a different hand type every hand
   while the climb wants the same shape repeated, which can leave a round
   unwinnable for the same reason.
+
+## Observed in play
+
+One run at ante 3 (round 7, The Hook, 4,000 to beat) went out on a Two Pair
+lvl.2 for 259 x 24 = 6,216 against 390 already banked. Without the shed bonus
+that hand scores 3,108, for 3,498 total -- a loss by 502. **The shed bonus was
+the difference between clearing the blind and failing it**, which is the gamble
+the design asked for rather than a surplus.
+
+Worth recording because the instinct on seeing 6,216 was to cut the bonus. The
+number to look at first is the mult it multiplied: five jokers had turned a
+base 3 into 12 before the bonus applied. The bonus doubles whatever the build
+produced, so joker scaling is the larger multiplier and cutting the bonus
+punishes a weak build harder than a strong one. If the bonus ever does need
+cutting, moving it earlier (so jokers scale on top of it rather than it scaling
+their work) is the lever that shrinks with build strength instead of against it.
+
+A second thing that run exposed: `cm_climb_refund` fires on the exit hand too,
+refunding a discard at the moment the round ends and it can never be spent.
 
 ## Decided and rejected
 

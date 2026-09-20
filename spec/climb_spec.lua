@@ -314,17 +314,31 @@ describe("the shed bonus", function()
   end)
 
   -- Keyed on what the hand contains, so a pair is X2 wherever it appears.
-  it("pays X2 for a pair, two pair or a flush", function()
+  it("pays X2 for a pair or two pair", function()
     assert.equal(2, Climb.shed_xmult("Pair"))
     assert.equal(2, Climb.shed_xmult("Two Pair"))
-    assert.equal(2, Climb.shed_xmult("Flush"))
   end)
 
-  it("pays X3 for a triple, a straight or a full house", function()
+  it("pays X3 for a triple, a straight, a flush or a full house", function()
     assert.equal(3, Climb.shed_xmult("Three of a Kind"))
     assert.equal(3, Climb.shed_xmult("Straight"))
+    assert.equal(3, Climb.shed_xmult("Flush"))
     -- A full house contains a triple; it outranks a straight but pays the same.
     assert.equal(3, Climb.shed_xmult("Full House"))
+  end)
+
+  -- The payout must never dip as the hand gets stronger. A flush paying X2
+  -- while the straight below it paid X3 was exactly that, and it is the kind
+  -- of thing only a whole-table assertion catches.
+  it("never pays less for a stronger hand", function()
+    local previous = 0
+    for i = #G.handlist, 1, -1 do
+      local name = G.handlist[i]
+      local x = Climb.shed_xmult(name) or 0
+      assert.is_true(x >= previous,
+        name .. " pays X" .. x .. ", less than the weaker hand below it")
+      previous = x
+    end
   end)
 
   it("pays X4 for four of a kind and anything above it", function()
