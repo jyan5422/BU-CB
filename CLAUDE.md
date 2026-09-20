@@ -4,26 +4,49 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**BU-CB** (Balatro Custom Challenges) is a mod for the game **Balatro** using the **Lovely mod loader**. It adds custom challenge runs with unique rules, restrictions, and mechanics.
+**BU-CB** (Balatro Custom Challenges) is a mod for the game **Balatro**. It adds
+custom challenge runs with unique rules, restrictions, and mechanics.
+
+It is a **Steamodded** mod that also ships **Lovely** patches. Steamodded loads
+`ChallengeMod.lua`; Lovely applies the `lovely/*.toml` patches for the handful
+of places a Lua hook cannot reach (locals inside `evaluate_play`, UI table
+literals). Both are required.
+
+**Read [docs/modding-notes.md](docs/modding-notes.md) before changing anything.**
+It records the game internals and testing traps that have each already caused a
+wrong fix -- packaging, `current_round` mutation, scoring passes, sort bands,
+DynaText caching, and the ways specs pass while the game is broken.
 
 ## Architecture
 
-- **lovely.toml** - Lovely manifest defining patches that inject code into the base game
-- **mod.lua** - Entry point loaded by Lovely, calls `initChallenges()`
-- **Challenges.lua** - Core mod logic: loads all challenge files, defines custom modifiers, hooks into game functions
-- **Challenges/*.lua** - Individual challenge definitions (20+ challenges)
-- **nativefs.lua** - Native filesystem access for Lovely
+- **ChallengeMod.json** - Steamodded manifest
+- **ChallengeMod.lua** - Entry point; loads everything in a fixed order
+- **challenge_handler.lua** / **Daily/daily_handler.lua** - Append challenge
+  `DATA` tables to `G.CHALLENGES`
+- **mechanics.lua** / **Daily/daily_mechanics.lua** - Modifier localization
+  (`ch_c_*`) and the `evaluate_rules` branches that apply them
+- **core.lua**, **smods/core_shared.lua** - Shared helpers
+- **smods/rules_*.lua** - One file per reusable rule, exposed on `ChallengeMod`
+  so a joker or another challenge can take one piece
+- **smods/register.lua** - Publishes into `SMODS.Challenges` **without** calling
+  `SMODS.Challenge()`; see the file for why
+- **smods/migrate_progress.lua** - Copies completions across renamed ids
+- **lovely/*.toml** - Source patches
+- **spec/** - busted specs, run by `./run_tests.sh`
 
 ## Key Files
 
 | File | Purpose |
 |------|---------|
-| `lovely.toml` | Patch definitions for game injection points |
-| `Challenges.lua` | Main mod logic, custom modifiers, game function hooks |
-| `mod.lua` | Mod entry point |
-| `Challenges/` | Directory of individual challenge definition files |
+| `ChallengeMod.lua` | Entry point and load order |
+| `mechanics.lua` | Modifier localization and `evaluate_rules` |
+| `Challenges/` | One file per challenge (37) |
+| `smods/rules_*.lua` | Reusable rule implementations |
+| `lovely/` | Source patches (25) |
+| `docs/modding-notes.md` | Game internals and testing traps |
+| `docs/big-wee-design.md` | Worked example of a multi-rule challenge |
 
-## Custom Modifiers (defined in Challenges.lua)
+## Custom Modifiers (localized in mechanics.lua, applied in `evaluate_rules`)
 
 - `cm_force_hand` - Only specific hand type scores
 - `cm_force_hand_contains` - Played hands must contain specific hand type
@@ -53,21 +76,31 @@ Each challenge in `Challenges/` returns a table with:
 
 ## Development Commands
 
-This is a Lua mod for a Love2D game. There are no build/lint/test commands - the mod is loaded directly by Lovely at runtime. To test changes:
+```sh
+./run_tests.sh          # busted specs (Lua 5.1)
+balatro-run <dir>       # launch the real game against a staged copy of the mod
+./push_to_phone.sh      # build a FLAT zip and taildrop it to the phone
+```
 
-1. Install Lovely mod loader for Balatro
-2. Place mod in Balatro's mods folder
-3. Launch Balatro
+Verify in that order, then on device. A failed Lovely patch is only a `WARN` in
+the log, so always grep the log for your own `no matches` and confirm the
+payload landed in `~/.local/share/love/Mods/lovely/dump/`. See
+`docs/modding-notes.md`.
 
 ## Git
 
-- Main branch: `master`
-- Clean working tree
-- Recent changes: challenge fixes, automatic info rule for non-challenge decks
+- Main branch: `dev-main`
+- `origin` is the personal fork (`jyan5422/BU-CB`); `bucbdev` and `oceanramen`
+  are upstreams. This fork is a collection of BU ideas from several forks.
 
 ## Code Style
 
-- Lua 5.1 (Love2D/Lovely)
+- Lua 5.1 (Love2D/LuaJIT)
 - 2-space indentation
-- Challenge files use `return { ... }` pattern
+- Challenge files set `Challenge.NAME`/`DATA` and end with `return Challenge`
+  (a missing `return` loads silently and the challenge just never appears)
 - Modifiers use `id`/`value` pairs in rules tables
+- A modifier needs **both** an `evaluate_rules` branch and a `ch_c_<id>`
+  localization string; a missing string is what breaks the rule
+- Express a modifier's value as a **bonus or penalty**, not an absolute, so it
+  composes with whatever the deck already grants

@@ -270,6 +270,25 @@ end
 --- to fit maxw = 9, so the joined string came out smaller than either half
 --- would alone. Without any of this the player is told the hand will not score
 --- but never why -- the most confusing thing about the rule in playtesting.
+--- Where an alert should be drawn.
+---
+--- Two anchors, for two situations. Centred on the room is right while the
+--- player is still choosing, when the middle of the screen is empty. Once a
+--- hand is committed the cards fly to the middle, and centred text draws
+--- UNDERNEATH them -- seen in play as "Must beat 2 of Diamonds" rendering
+--- behind the played ace. A committed message therefore uses the same anchor
+--- as the game's own play_area_status_text: top-aligned above the play area.
+---
+--- Split out from the alert itself so the rule is assertable; the alert has to
+--- touch attention_text and cannot be called from a spec.
+function Climb.alert_placement(opts)
+  opts = opts or {}
+  if opts.over_play then
+    return { align = "tm", y = opts.y or -1 }
+  end
+  return { align = "cm", y = opts.y or 0 }
+end
+
 function Climb.selection_subtext()
   local why = Climb.last_reason
   if not why then return nil end

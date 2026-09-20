@@ -25,21 +25,25 @@ local function alert(text, opts)
   if not opts.force and now < alert_until then return end
   alert_until = math.max(alert_until, now) + hold
 
+  local place = Climb.alert_placement(opts)
+  local over_play = opts.over_play
+  local delay = opts.delay or 0
+
   G.E_MANAGER:add_event(Event({
-    trigger = "immediate",
+    trigger = delay > 0 and "after" or "immediate",
+    delay = delay,
     func = function()
       attention_text({
         text = text,
         scale = 0.6,
         hold = hold,
-        -- Centred on the room rather than anchored to a card area: attaching
-        -- to G.play put it over the score, and G.hand put it over the cards.
         -- G.ROOM_ATTACH is what the game centres its own dialogue on. It is
         -- nil outside a run, hence the fallback.
-        major = G.ROOM_ATTACH or G.play or G.hand,
+        major = over_play and (G.play or G.ROOM_ATTACH)
+          or (G.ROOM_ATTACH or G.play or G.hand),
         backdrop_colour = opts.colour or G.C.RED,
-        align = "cm",
-        offset = { x = 0, y = opts.y or 0 },
+        align = place.align,
+        offset = { x = 0, y = place.y },
         silent = true,
       })
       return true
@@ -83,7 +87,15 @@ function Blind:debuff_hand(cards, hand, handname, check)
           -- Failing clears the trick, so the next hand leads freely. Without
           -- that a bad play would leave the same unbeatable lock in place.
           Climb.clear_lock()
-          alert(why or "does not beat it", { hold = 1.6, force = true })
+          -- Not the reason again: the warning row has been showing that for as
+          -- long as the selection stood, and the game follows this with its own
+          -- "Not Allowed!". What the player does not yet know is that the climb
+          -- is now open. Delayed past that message so the two read in sequence
+          -- at the same spot rather than on top of each other.
+          alert("Climb reset", {
+            colour = G.C.BLUE, hold = 1.1, force = true,
+            over_play = true, delay = 1.1,
+          })
         end
         return true
       end
@@ -123,6 +135,22 @@ G.FUNCS.cm_update_climb_reason = function(e)
     e.config.object:update_text(true)
     e.UIBox:recalculate()
   end
+end
+
+--- The shed payout flash, fired from lovely/cm_shed_bonus.toml once the bonus
+--- has been applied.
+---
+--- Horizontally centred and static, above the played cards. It used to go
+--- through card_eval_status_text anchored to the LAST played card, the way a
+--- joker announces itself -- which pinned it to a card, so it sat off to one
+--- side and slid around with the scoring animation. This is a payout for the
+--- hand as a whole, not for one card, so it is anchored where the game puts
+--- its own play-area messages instead.
+function ChallengeMod.Climb.shed_flash(x)
+  if not ChallengeMod.Climb.shed_announce() then return end
+  alert(("X%s Shed"):format(tostring(x)), {
+    colour = G.C.MULT, hold = 1.2, force = true, over_play = true,
+  })
 end
 
 -- Shed bonus on selection. The preview mult already includes it

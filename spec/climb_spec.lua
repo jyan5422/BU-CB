@@ -877,3 +877,30 @@ describe("Big 2 sort order, by suit", function()
     end
   end)
 end)
+
+-- Alert placement. Split out of the alert so it can be asserted at all: the
+-- alert itself touches attention_text and cannot run in a spec.
+describe("alert placement", function()
+  before_each(load_module)
+
+  -- While choosing, the middle of the screen is empty and is the best place
+  -- to put a message.
+  it("centres a message about the current selection", function()
+    local p = Climb.alert_placement({})
+    assert.equal("cm", p.align)
+    assert.equal(0, p.y)
+  end)
+
+  -- Once a hand is committed the cards fly to the middle, so centred text
+  -- draws underneath them. Seen in play as the rejection reason rendering
+  -- behind the played ace.
+  it("lifts a committed message clear of the played cards", function()
+    local p = Climb.alert_placement({ over_play = true })
+    assert.equal("tm", p.align)
+    assert.is_true(p.y < 0, "a committed message must sit above the play area")
+  end)
+
+  it("lets a caller override the offset", function()
+    assert.equal(-3, Climb.alert_placement({ over_play = true, y = -3 }).y)
+  end)
+end)
