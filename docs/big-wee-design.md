@@ -317,9 +317,19 @@ through chips alone.
 Each should fit on one line, like a joker:
 
 - +5 hand size, dealt once per round.
+In the order they appear, which runs from the rule that defines the challenge
+down to the resources it hands you:
+
 - Climb: same size, higher rank.
-- -3 discards, but earns a discard by climbing.
 - Shed your cards for up to X4.
+- 2 is the highest card.
+- Spades > hearts > clubs > diamonds.
+- Straights may wrap around.
+- +5 hand size, dealt once per round.
+- -3 discards, but earns a discard by climbing.
+
+The hand-size and discard lines sit last and next to each other: both are
+about what you start a round holding.
 
 The penalty and the refund are one line, not two: they are a single
 risk/reward decision and splitting them made the player join them up. "Discard

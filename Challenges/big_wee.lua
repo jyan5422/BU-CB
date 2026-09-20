@@ -6,14 +6,12 @@ Challenge.DATE_CREATED = 260915 -- Y/M/D
 Challenge.VERSION = "0.1.0"
 Challenge.DATA = {
   rules = {
+    -- This order is what the player reads in the rules panel, so it runs from
+    -- the rule that defines the challenge down to the resources it hands you.
+    -- The hand-size and discard lines sit last and together: both are about
+    -- what you start a round holding.
     custom = {
       { id = "cm_climb" },
-      -- -3 on the base 3 leaves no discards, so every pass has to be earned
-      -- by climbing. Written as a penalty so a deck granting extras keeps them.
-      -- A negative value also turns cm_climb_refund on, so the risk and the
-      -- reward read as one rule rather than two lines the player has to join
-      -- up -- which is not listed separately here for that reason.
-      { id = "cm_pass", value = -3 },
       { id = "cm_shed_bonus" },
       { id = "cm_rank_chips" },
       { id = "cm_suit_chips" },
@@ -21,6 +19,12 @@ Challenge.DATA = {
       -- +5 on the base 8 gives the 13 Big 2 deals, and breathes with any
       -- deck that already changes hand size.
       { id = "cm_no_redraw", value = 5 },
+      -- -3 on the base 3 leaves no discards, so every pass has to be earned
+      -- by climbing. Written as a penalty so a deck granting extras keeps them.
+      -- A negative value also turns cm_climb_refund on, so the risk and the
+      -- reward read as one rule rather than two lines the player has to join
+      -- up -- which is why it is not listed separately.
+      { id = "cm_pass", value = -3 },
     },
     modifiers = {
       -- Hand size comes from cm_no_redraw's +5, not a flat value here.
