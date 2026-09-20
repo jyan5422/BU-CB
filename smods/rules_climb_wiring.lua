@@ -44,8 +44,16 @@ local function alert(text, opts)
         backdrop_colour = opts.colour or G.C.RED,
         align = place.align,
         offset = { x = 0, y = place.y },
+        -- attention_text's own sound is a UI blip. Silenced so a caller can
+        -- ask for the sound that matches what the message means instead.
         silent = true,
       })
+      -- Pitch and volume copied from card_eval_status_text's x_mult branch, so
+      -- an Xmult announced by this reads as the same event as one announced by
+      -- a joker rather than a near-miss of it.
+      if opts.sound and play_sound then
+        play_sound(opts.sound, opts.pitch or 1, opts.volume)
+      end
       return true
     end,
   }))
@@ -153,6 +161,8 @@ function ChallengeMod.Climb.shed_flash(x)
   if not ChallengeMod.Climb.shed_announce() then return end
   alert(Climb.shed_label(x), {
     colour = G.C.MULT, hold = 1.2, force = true, under_play = true,
+    -- The shed payout IS an Xmult, so it gets the game's Xmult sound.
+    sound = "multhit2", pitch = 0.96, volume = 0.7,
   })
 end
 
@@ -168,7 +178,10 @@ function ChallengeMod.Climb.shed_preview_flash(x)
   if x == shed_flashed then return end
   shed_flashed = x
   if x > 1 then
-    alert(Climb.shed_label(x), { colour = G.C.MULT, hold = 1.1, force = true })
+    alert(Climb.shed_label(x), {
+      colour = G.C.MULT, hold = 1.1, force = true,
+      sound = "multhit2", pitch = 0.96, volume = 0.7,
+    })
   end
 end
 

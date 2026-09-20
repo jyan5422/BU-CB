@@ -6,15 +6,18 @@ Challenge.DATE_CREATED = 260915 -- Y/M/D
 Challenge.VERSION = "0.1.0"
 Challenge.DATA = {
   rules = {
-    -- This order is what the player reads in the rules panel, so it runs from
-    -- the rule that defines the challenge down to the resources it hands you.
-    -- The hand-size and discard lines sit last and together: both are about
-    -- what you start a round holding.
+    -- This order is what the player reads in the rules panel: the card order
+    -- first, then how a hand is played, then the resources you get. The
+    -- hand-size and discard lines sit last and together, both being about what
+    -- you start a round holding.
     custom = {
-      { id = "cm_climb" },
-      { id = "cm_shed_bonus" },
+      -- The two card-order rules lead: they rewrite what the player already
+      -- knows about a deck, and nothing below reads correctly until they have
+      -- landed.
       { id = "cm_rank_chips" },
       { id = "cm_suit_chips" },
+      { id = "cm_climb" },
+      { id = "cm_shed_bonus" },
       { id = "cm_wrap_straights" },
       -- +5 on the base 8 gives the 13 Big 2 deals, and breathes with any
       -- deck that already changes hand size.

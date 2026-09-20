@@ -320,13 +320,17 @@ Each should fit on one line, like a joker:
 In the order they appear, which runs from the rule that defines the challenge
 down to the resources it hands you:
 
+- 2 is the highest card.
+- Spades > hearts > clubs > diamonds. *(each suit in its own colour)*
 - Climb: same size, higher rank.
 - Shed your cards for up to X4.
-- 2 is the highest card.
-- Spades > hearts > clubs > diamonds.
 - Straights may wrap around.
 - +5 hand size, dealt once per round.
-- -3 discards, but earns a discard by climbing.
+- -3 discards, earns a discard by climbing.
+
+The two card-order rules lead, because they rewrite what the player already
+knows about a deck and nothing below them reads correctly until they have
+landed.
 
 The hand-size and discard lines sit last and next to each other: both are
 about what you start a round holding.
