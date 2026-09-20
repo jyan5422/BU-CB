@@ -253,9 +253,18 @@ empty hand with the limit still at 13 is safe -- it simply draws nothing.
 ## The challenge
 
 - Hand size **+5**, giving the 13 that Big 2 deals from a vanilla base of 8
-- **4** hands to start, and **no** discards: `cm_pass` carries a **-3** penalty
-  on the base 3, so every pass must be earned by climbing. Written as a penalty
-  rather than a flat 0 so a deck granting extra discards keeps them.
+- **4** hands to start, and **one** discard: `cm_pass` carries a **-2** penalty
+  on the base 3. Written as a penalty rather than a flat 1 so a deck granting
+  extra discards keeps them.
+
+  It was -3 (no discards) and that was unrecoverable, not merely hard. A
+  discard is the only way to reset a climb, and the only way to earn a discard
+  is to complete a climb -- so an opening lead you could not beat left no
+  escape at all, and every remaining hand was thrown away for nothing.
+  Observed as a dead run in round 1 of ante 1: 4 hands gone, 30 points of 300.
+  Worst for a new player, who does not yet know that the 2 is the highest rank
+  or that a five-card climb needs another five-card hand. One guaranteed reset
+  breaks the circle; every pass after it still has to be earned.
 - All eight modifiers above
 - **The Psychic banned** (`bl_psychic`, `debuff = {h_size_ge = 5}`): it requires
   every played hand to contain 5 cards, so a 1-, 2- or 3-card lock would make
@@ -325,7 +334,7 @@ down to the resources it hands you:
 - Shed your cards for up to X4.
 - Straights may wrap around.
 - +5 hand size, dealt once per round.
-- -3 discards, earns a discard by climbing.
+- -2 discards, earns a discard by climbing.
 - Climb: same size, higher rank.
 
 The two card-order rules lead, because they rewrite what the player already
@@ -352,9 +361,9 @@ than a rules screen does.
    warning now carries "..., discard to reset" as its subtext, so the escape is
    named at the moment the player needs it. Relabelling the button to "Pass"
    when nothing is selected is still open.
-2. **Starting hands and discards.** Settled at 4 hands and 0 discards
-   (`cm_pass -3` on the base 3) after playtesting; 3 starting discards was too
-   strong. Still a balance guess rather than a tuned number.
+2. **Starting hands and discards.** 4 hands and 1 discard (`cm_pass -2` on
+   the base 3). Arrived at from both ends: 3 was too strong, 0 was
+   unrecoverable. Still a balance guess rather than a tuned number.
 3. **Is 13 enough compensation for no redraw?** Decided yes: 13 cards buys two
    full 5-card plays plus a trailing 3, so a round is 2-3 plays before the hand
    runs dry, and the drawdown is the point rather than a cost. If it plays too

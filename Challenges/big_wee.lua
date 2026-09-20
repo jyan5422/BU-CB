@@ -21,12 +21,18 @@ Challenge.DATA = {
       -- +5 on the base 8 gives the 13 Big 2 deals, and breathes with any
       -- deck that already changes hand size.
       { id = "cm_no_redraw", value = 5 },
-      -- -3 on the base 3 leaves no discards, so every pass has to be earned
-      -- by climbing. Written as a penalty so a deck granting extras keeps them.
-      -- A negative value also turns cm_climb_refund on, so the risk and the
-      -- reward read as one rule rather than two lines the player has to join
-      -- up -- which is why it is not listed separately.
-      { id = "cm_pass", value = -3 },
+      -- -2 on the base 3 leaves exactly one discard. -3 left none, which was
+      -- unrecoverable: a discard is the only way to reset a climb, and the
+      -- only way to earn a discard is to complete one, so an opening lead you
+      -- could not beat threw away every remaining hand for nothing. Seen in
+      -- play as a dead run in round 1 of ante 1. One guaranteed reset breaks
+      -- that circle; every pass after it still has to be earned.
+      --
+      -- Written as a penalty so a deck granting extras keeps them. A negative
+      -- value also turns cm_climb_refund on, so the risk and the reward read
+      -- as one rule rather than two lines the player has to join up -- which
+      -- is why the refund is not listed separately.
+      { id = "cm_pass", value = -2 },
       { id = "cm_climb" },
     },
     modifiers = {
