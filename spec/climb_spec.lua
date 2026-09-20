@@ -956,8 +956,15 @@ describe("the shed payout label", function()
 
   -- "X2 Shed" read as a sticker, with the multiplier looking like a label on
   -- the word rather than a payout.
-  it("reads as a sentence", function()
+  it("names the bonus while the player is choosing", function()
     assert.equal("Shed for X2", Climb.shed_label(2))
     assert.equal("Shed for X4", Climb.shed_label(4))
+  end)
+
+  -- During scoring the mult is visibly climbing and every other Xmult in the
+  -- game announces itself as just the multiplier.
+  it("is bare during scoring", function()
+    assert.equal("X2", Climb.shed_score_label(2))
+    assert.equal("X4", Climb.shed_score_label(4))
   end)
 end)

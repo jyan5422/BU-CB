@@ -159,7 +159,7 @@ end
 --- hand as a whole, not for one card.
 function ChallengeMod.Climb.shed_flash(x)
   if not ChallengeMod.Climb.shed_announce() then return end
-  alert(Climb.shed_label(x), {
+  alert(Climb.shed_score_label(x), {
     colour = G.C.MULT, hold = 1.2, force = true, under_play = true,
     -- The shed payout IS an Xmult, so it gets the game's Xmult sound.
     sound = "multhit2", pitch = 0.96, volume = 0.7,

@@ -279,10 +279,22 @@ end
 --- to fit maxw = 9, so the joined string came out smaller than either half
 --- would alone. Without any of this the player is told the hand will not score
 --- but never why -- the most confusing thing about the rule in playtesting.
---- How the shed payout is announced. Reads as a sentence rather than a
---- sticker: "X2 Shed" made the multiplier look like a label on the word.
+--- How the shed bonus is announced while the player is choosing. Reads as a
+--- sentence rather than a sticker: "X2 Shed" made the multiplier look like a
+--- label on the word. Named because nothing else on screen explains where the
+--- doubled preview mult came from.
 function Climb.shed_label(x)
   return ("Shed for X%s"):format(tostring(x))
+end
+
+--- How it is announced during scoring, where it is bare.
+---
+--- By then the shed has happened and the mult is visibly climbing, so the word
+--- is noise -- and every other Xmult in the game announces itself as just the
+--- multiplier. Matching that makes it read as part of the scoring run rather
+--- than a comment on it.
+function Climb.shed_score_label(x)
+  return ("X%s"):format(tostring(x))
 end
 
 --- Where an alert should be drawn.
