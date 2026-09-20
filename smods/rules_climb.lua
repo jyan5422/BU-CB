@@ -279,21 +279,33 @@ end
 --- to fit maxw = 9, so the joined string came out smaller than either half
 --- would alone. Without any of this the player is told the hand will not score
 --- but never why -- the most confusing thing about the rule in playtesting.
+--- How the shed payout is announced. Reads as a sentence rather than a
+--- sticker: "X2 Shed" made the multiplier look like a label on the word.
+function Climb.shed_label(x)
+  return ("Shed for X%s"):format(tostring(x))
+end
+
 --- Where an alert should be drawn.
 ---
---- Two anchors, for two situations. Centred on the room is right while the
---- player is still choosing, when the middle of the screen is empty. Once a
---- hand is committed the cards fly to the middle, and centred text draws
---- UNDERNEATH them -- seen in play as "Must beat 2 of Diamonds" rendering
---- behind the played ace. A committed message therefore uses the same anchor
---- as the game's own play_area_status_text: top-aligned above the play area.
+--- Two anchors, for two situations.
+---
+--- While the player is still choosing, the middle of the screen is empty and
+--- centred text belongs there.
+---
+--- Once a hand is committed the middle is taken: the cards fly to it, and the
+--- game puts its own "Not Allowed!" immediately above them via
+--- play_area_status_text. Centred text drew behind the cards; text above them
+--- collided with "Not Allowed!" -- the game queues that as a `before` event
+--- and ours as an `after`, so a delay does not reliably separate the two.
+--- Below the played cards is the one free band, and being a different place
+--- rather than a different time it cannot collide however the queue resolves.
 ---
 --- Split out from the alert itself so the rule is assertable; the alert has to
 --- touch attention_text and cannot be called from a spec.
 function Climb.alert_placement(opts)
   opts = opts or {}
-  if opts.over_play then
-    return { align = "tm", y = opts.y or -1 }
+  if opts.under_play then
+    return { align = "bm", y = opts.y or 1 }
   end
   return { align = "cm", y = opts.y or 0 }
 end

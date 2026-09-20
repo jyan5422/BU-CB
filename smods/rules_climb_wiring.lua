@@ -26,7 +26,7 @@ local function alert(text, opts)
   alert_until = math.max(alert_until, now) + hold
 
   local place = Climb.alert_placement(opts)
-  local over_play = opts.over_play
+  local under_play = opts.under_play
   local delay = opts.delay or 0
 
   G.E_MANAGER:add_event(Event({
@@ -39,7 +39,7 @@ local function alert(text, opts)
         hold = hold,
         -- G.ROOM_ATTACH is what the game centres its own dialogue on. It is
         -- nil outside a run, hence the fallback.
-        major = over_play and (G.play or G.ROOM_ATTACH)
+        major = under_play and (G.play or G.ROOM_ATTACH)
           or (G.ROOM_ATTACH or G.play or G.hand),
         backdrop_colour = opts.colour or G.C.RED,
         align = place.align,
@@ -90,11 +90,15 @@ function Blind:debuff_hand(cards, hand, handname, check)
           -- Not the reason again: the warning row has been showing that for as
           -- long as the selection stood, and the game follows this with its own
           -- "Not Allowed!". What the player does not yet know is that the climb
-          -- is now open. Delayed past that message so the two read in sequence
-          -- at the same spot rather than on top of each other.
+          -- is now open.
+          --
+          -- Placed below the played cards, where "Not Allowed!" is above them.
+          -- A delay was tried first and did not work: the game queues its
+          -- message as a `before` event and this as an `after`, so the two
+          -- landed together and overprinted each other.
           alert("Climb reset", {
-            colour = G.C.BLUE, hold = 1.1, force = true,
-            over_play = true, delay = 1.1,
+            colour = G.C.BLUE, hold = 1.2, force = true,
+            under_play = true, delay = 0.6,
           })
         end
         return true
@@ -140,16 +144,15 @@ end
 --- The shed payout flash, fired from lovely/cm_shed_bonus.toml once the bonus
 --- has been applied.
 ---
---- Horizontally centred and static, above the played cards. It used to go
+--- Horizontally centred and static, below the played cards. It used to go
 --- through card_eval_status_text anchored to the LAST played card, the way a
 --- joker announces itself -- which pinned it to a card, so it sat off to one
 --- side and slid around with the scoring animation. This is a payout for the
---- hand as a whole, not for one card, so it is anchored where the game puts
---- its own play-area messages instead.
+--- hand as a whole, not for one card.
 function ChallengeMod.Climb.shed_flash(x)
   if not ChallengeMod.Climb.shed_announce() then return end
-  alert(("X%s Shed"):format(tostring(x)), {
-    colour = G.C.MULT, hold = 1.2, force = true, over_play = true,
+  alert(Climb.shed_label(x), {
+    colour = G.C.MULT, hold = 1.2, force = true, under_play = true,
   })
 end
 
@@ -165,7 +168,7 @@ function ChallengeMod.Climb.shed_preview_flash(x)
   if x == shed_flashed then return end
   shed_flashed = x
   if x > 1 then
-    alert(("X%s Shed"):format(x), { colour = G.C.MULT, hold = 1.1, force = true })
+    alert(Climb.shed_label(x), { colour = G.C.MULT, hold = 1.1, force = true })
   end
 end
 

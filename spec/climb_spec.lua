@@ -891,17 +891,19 @@ describe("alert placement", function()
     assert.equal(0, p.y)
   end)
 
-  -- Once a hand is committed the cards fly to the middle, so centred text
-  -- draws underneath them. Seen in play as the rejection reason rendering
-  -- behind the played ace.
-  it("lifts a committed message clear of the played cards", function()
-    local p = Climb.alert_placement({ over_play = true })
-    assert.equal("tm", p.align)
-    assert.is_true(p.y < 0, "a committed message must sit above the play area")
+  -- Once a hand is committed the middle is taken by the cards and the band
+  -- above them by the game's own "Not Allowed!". Below is the free band, and
+  -- being a different place rather than a different time it cannot collide
+  -- however the event queue resolves -- a delay was tried first and the two
+  -- messages still overprinted each other.
+  it("drops a committed message below the played cards", function()
+    local p = Climb.alert_placement({ under_play = true })
+    assert.equal("bm", p.align)
+    assert.is_true(p.y > 0, "a committed message must sit below the play area")
   end)
 
   it("lets a caller override the offset", function()
-    assert.equal(-3, Climb.alert_placement({ over_play = true, y = -3 }).y)
+    assert.equal(3, Climb.alert_placement({ under_play = true, y = 3 }).y)
   end)
 end)
 
@@ -943,5 +945,16 @@ describe("the shed bonus preview", function()
   it("shows nothing when the rule is off", function()
     _G.G.GAME.modifiers.cm_shed_bonus = nil
     assert.equal(1, Climb.shed_preview_xmult(area, "Three of a Kind"))
+  end)
+end)
+
+describe("the shed payout label", function()
+  before_each(load_module)
+
+  -- "X2 Shed" read as a sticker, with the multiplier looking like a label on
+  -- the word rather than a payout.
+  it("reads as a sentence", function()
+    assert.equal("Shed for X2", Climb.shed_label(2))
+    assert.equal("Shed for X4", Climb.shed_label(4))
   end)
 end)
