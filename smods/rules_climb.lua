@@ -302,15 +302,15 @@ end
 ---
 --- The offset is deliberately small. A full unit clears the play area but
 --- lands on the hand, which sits immediately below it -- there is no empty
---- space down there, only the gap between the played cards and the hand. 0.4
---- puts the text in that gap.
+--- space down there, only the gap between the played cards and the hand. 0.2
+--- centres the text in that gap; 0.4 still clipped the top of the cards.
 ---
 --- Split out from the alert itself so the rule is assertable; the alert has to
 --- touch attention_text and cannot be called from a spec.
 function Climb.alert_placement(opts)
   opts = opts or {}
   if opts.under_play then
-    return { align = "bm", y = opts.y or 0.4 }
+    return { align = "bm", y = opts.y or 0.2 }
   end
   return { align = "cm", y = opts.y or 0 }
 end
