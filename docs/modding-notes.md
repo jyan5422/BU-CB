@@ -27,6 +27,26 @@ Two rules that would have caught all four:
 And assert observable effects — score, sort order, placement — not the
 condition you happen to be thinking about.
 
+## Diagnose by looking, not by reasoning
+
+Three UI bugs in a row were misdiagnosed on the first pass, each time by
+reasoning about *which mechanism* was at fault instead of checking *where the
+thing actually landed*:
+
+| symptom | my first theory | actual cause |
+|---|---|---|
+| flash off to one side, drifting | needed a different offset | `card_eval_status_text` anchors to a **card** |
+| two messages overprinting | needed a delay | game queues `before`, ours `after` — they never ordered |
+| subtext too small | needed a bigger scale | `DynaText` **autofits** to `maxw` |
+
+In all three the fix was structural, not a parameter. The cheap check that
+would have short-circuited each: look at what the thing is *anchored to* and
+what *sizes* it, before touching numbers. Position bugs are anchor bugs; size
+bugs are fit bugs; ordering bugs are queue-kind bugs.
+
+Corollary: when two things must not collide, separate them in **space**, not in
+time. A different place cannot collide however the event queue resolves.
+
 ## Verifying a change
 
 In order, cheapest first:
