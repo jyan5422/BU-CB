@@ -155,6 +155,11 @@ it is one line. SMODS composes it with Four Fingers and Shortcut itself
 
 ### 6. `cm_climb_refund` — hold the climb, keep the pass
 
+Turned on by a negative `cm_pass` value rather than listed separately, so the
+risk and the reward read as **one** rule to the player: "-3 discards, but earns
+a discard by climbing". It stays a modifier of its own so a joker or another
+challenge can take the reward without the penalty.
+
 A successful continuation refunds one discard.
 
 This is the counterweight to how punishing the lock is. It cannot be exploited
@@ -313,9 +318,14 @@ Each should fit on one line, like a joker:
 
 - +5 hand size, dealt once per round.
 - Climb: same size, higher rank.
-- Each climb earns a discard.
-- Discard to start a new climb.
-- Empty your hand for up to X4.
+- -3 discards, but earns a discard by climbing.
+- Shed your cards for up to X4.
+
+The penalty and the refund are one line, not two: they are a single
+risk/reward decision and splitting them made the player join them up. "Discard
+to start a new climb" was dropped from this list because the in-game warning
+now says "discard to reset" at the moment it matters, which teaches it better
+than a rules screen does.
 
 ## Open questions
 

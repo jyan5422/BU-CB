@@ -10,8 +10,10 @@ Challenge.DATA = {
       { id = "cm_climb" },
       -- -3 on the base 3 leaves no discards, so every pass has to be earned
       -- by climbing. Written as a penalty so a deck granting extras keeps them.
+      -- A negative value also turns cm_climb_refund on, so the risk and the
+      -- reward read as one rule rather than two lines the player has to join
+      -- up -- which is not listed separately here for that reason.
       { id = "cm_pass", value = -3 },
-      { id = "cm_climb_refund" },
       { id = "cm_shed_bonus" },
       { id = "cm_rank_chips" },
       { id = "cm_suit_chips" },

@@ -437,3 +437,48 @@ describe("facedown reveal actually flips cards", function()
     assert.equal("front", G.jokers.cards[1].facing, "did not reveal at game over")
   end)
 end)
+
+-- cm_pass carries both halves of one risk/reward rule: the discard penalty and
+-- the climb refund. The coupling is implicit, so it needs asserting -- nothing
+-- else would notice if the refund quietly stopped being switched on.
+describe("the pass penalty and the climb refund", function()
+  local challenge_mod
+
+  setup(function()
+    challenge_mod = harness.load().mod
+  end)
+
+  -- evaluate_rules takes the Game as its first argument and reads self.GAME,
+  -- so a bare table with a GAME field is enough to drive it.
+  local function apply(value, discards)
+    local game = {
+      GAME = { modifiers = {}, starting_params = { discards = discards or 3 } },
+    }
+    challenge_mod.evaluate_rules(game, { id = "cm_pass", value = value })
+    return game.GAME
+  end
+
+  it("spends the discards and grants the refund together", function()
+    local g = apply(-3)
+    assert.equal(0, g.starting_params.discards)
+    assert.is_true(g.modifiers.cm_pass)
+    assert.is_true(g.modifiers.cm_climb_refund,
+      "a discard penalty must come with the way to earn them back")
+  end)
+
+  it("never takes discards below zero", function()
+    assert.equal(0, apply(-99).starting_params.discards)
+  end)
+
+  -- The penalty is a bonus/penalty rather than an absolute, so a deck granting
+  -- extra discards keeps them.
+  it("applies to whatever the deck granted", function()
+    assert.equal(2, apply(-3, 5).starting_params.discards)
+  end)
+
+  -- Without a penalty there is nothing to earn back, so pass alone stays a
+  -- plain "you may discard nothing" rule.
+  it("does not grant a refund when there is no penalty", function()
+    assert.is_nil(apply(0).modifiers.cm_climb_refund)
+  end)
+end)

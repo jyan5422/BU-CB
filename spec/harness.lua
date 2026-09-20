@@ -158,6 +158,9 @@ function M.load()
   state.challenge_names = G.localization.misc.challenge_names
   state.completed = G.PROFILES[1].challenge_progress.completed
   state.smods_challenges = SMODS.Challenges
+  -- Via _G explicitly: busted's environment does not reliably resolve a
+  -- bare global reference, the same reason the climb spec assigns through _G.
+  state.mod = _G.ChallengeMod
 
   -- Only the mod's own entries; vanilla ids are the game's business.
   state.ours = {}

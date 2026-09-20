@@ -12,9 +12,9 @@ function ChallengeMod.localizeMechDescriptions()
   G.localization.misc.v_text.ch_c_cm_random_deck = { "Your deck is {C:attention}randomized{}" }
   G.localization.misc.v_text.ch_c_cm_mult_dollar_cap = { "{C:blue}Mult{} cannot exceed the current {C:money}$" }
   G.localization.misc.v_text.ch_c_cm_climb = { "{C:attention}Climb{}: same size, higher rank" }
-  G.localization.misc.v_text.ch_c_cm_pass = { "{C:red}#1#{} discards, but {C:attention}discard{} to start a new climb" }
+  G.localization.misc.v_text.ch_c_cm_pass = { "{C:red}#1#{} discards, but earns a {C:red}discard{} by {C:attention}climbing{}" }
   G.localization.misc.v_text.ch_c_cm_climb_refund = { "Each {C:attention}climb{} earns a {C:red}discard{}" }
-  G.localization.misc.v_text.ch_c_cm_shed_bonus = { "Empty your hand for up to {X:mult,C:white}X4{}" }
+  G.localization.misc.v_text.ch_c_cm_shed_bonus = { "{C:attention}Shed{} your cards for up to {X:mult,C:white}X4{}" }
   G.localization.misc.v_text.ch_c_cm_rank_chips = { "{C:attention}2{} is the highest card" }
   G.localization.misc.v_text.ch_c_cm_suit_chips = { "{C:attention}Spades{} > hearts > clubs > diamonds" }
   G.localization.misc.v_text.ch_c_cm_wrap_straights = { "{C:attention}Straights{} may wrap around" }
@@ -75,6 +75,14 @@ function ChallengeMod.evaluate_rules(self, v)
     if cost ~= 0 and self.GAME.starting_params then
       self.GAME.starting_params.discards =
         math.max(self.GAME.starting_params.discards + cost, 0)
+    end
+    -- The penalty and the refund are one risk/reward rule as far as the player
+    -- is concerned -- spend a discard to start a new climb, earn it back by
+    -- holding the climb -- so cm_pass turns the refund on and reads as a
+    -- single line. cm_climb_refund stays a modifier of its own so a joker or
+    -- another challenge can take the reward without the penalty.
+    if cost < 0 then
+      self.GAME.modifiers.cm_climb_refund = true
     end
   elseif v.id == 'cm_climb_refund' then
     self.GAME.modifiers.cm_climb_refund = true
