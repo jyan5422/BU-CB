@@ -74,6 +74,45 @@ describe("leaving challenge setup", function()
   end)
 end)
 
+-- PLAY must keep starting a run immediately. Customising is a second button,
+-- so the common case costs no extra click.
+describe("the customize button", function()
+  local patch, module
+
+  setup(function()
+    local f = assert(io.open("lovely/cm_customize_button.toml"))
+    patch = f:read("*a")
+    f:close()
+    local m = assert(io.open("smods/rules_challenge_setup.lua"))
+    module = m:read("*a")
+    m:close()
+  end)
+
+  it("leaves the play button alone", function()
+    assert.is_truthy(patch:match('button = "start_challenge_run"'),
+      "the play button must survive the patch")
+    assert.is_nil(module:match("G%.FUNCS%.start_challenge_run%s*="),
+      "play must not be overridden -- it starts the run immediately")
+  end)
+
+  it("adds its own entry point", function()
+    assert.is_truthy(patch:match('button = "cm_customize_challenge_run"'))
+    assert.is_truthy(module:match("G%.FUNCS%.cm_customize_challenge_run"))
+  end)
+
+  -- Both buttons share one row, so they have to fit in it.
+  it("makes room for both", function()
+    -- Only the payload: the anchor above it still quotes the original minw.
+    local payload = patch:match('position = "at"(.*)')
+    assert.is_truthy(payload, "payload not found")
+    local widths = {}
+    for w in payload:gmatch("minw = ([%d%.]+)") do widths[#widths + 1] = tonumber(w) end
+    assert.equal(2, #widths, "expected exactly two buttons")
+    assert.is_true(widths[1] + widths[2] <= 9,
+      "the two buttons must fit the width the single play button had")
+  end)
+end)
+
 describe("the deck precedence patch", function()
   local patch
 

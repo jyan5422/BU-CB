@@ -31,11 +31,11 @@ pull in. The per-mechanic patches under `lovely/` still apply as Lovely patches.
 
 ### New in this fork
 
-**Deck and stake choice for any challenge.** Clicking a challenge used to start
-it immediately at White stake on whatever deck the challenge declared. It now
-opens the game's own New Run screen with the challenge held, so you can pick a
-deck and stake first. The challenge's own deck stays pre-selected, so leaving
-everything alone behaves exactly as before.
+**Deck and stake choice for any challenge.** A **Customize** button sits beside
+PLAY on the challenge panel. PLAY is unchanged — start now, White stake, the
+challenge's own deck. Customize opens the game's own New Run screen with the
+challenge held, so you can pick a deck and stake first, with the challenge's
+own deck pre-selected.
 
 What a challenge declares still wins where it matters: an explicit card list
 short-circuits deck generation, so a deck's effect cannot rewrite it. The deck's

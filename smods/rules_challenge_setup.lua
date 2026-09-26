@@ -1,13 +1,10 @@
 -- Choose a deck and stake for a challenge.
 --
--- Vanilla starts a challenge the instant you click it:
+-- Vanilla starts a challenge the instant you click it, so the stake is always
+-- White and the deck is always whatever the challenge declared. That remains
+-- what PLAY does; this adds a Customize button beside it.
 --
---   G.FUNCS.start_challenge_run = function(e)
---     G.FUNCS.start_run(e, {stake = 1, challenge = G.CHALLENGES[e.config.id]})
---   end
---
--- ...so the stake is always White and the deck is always whatever the
--- challenge declared. Everything needed to do better already exists: the New
+-- Everything needed already exists: the New
 -- Run tab of the same overlay has a deck picker and a stake picker, and its
 -- play button (G.FUNCS.start_setup_run) already reads G.challenge_tab and
 -- passes it to start_run alongside the chosen stake and seed.
@@ -73,12 +70,12 @@ function Setup.finish()
   remove_challenge_back()
 end
 
-local start_challenge_run_ref = G.FUNCS.start_challenge_run
-G.FUNCS.start_challenge_run = function(e)
+-- PLAY is left exactly as it was: click a challenge, start it, no extra step.
+-- Customising is a separate button beside it (lovely/cm_customize_button.toml)
+-- so the common case costs nothing.
+G.FUNCS.cm_customize_challenge_run = function(e)
   local challenge = G.CHALLENGES and e and e.config and G.CHALLENGES[e.config.id]
-  if not challenge then
-    return start_challenge_run_ref and start_challenge_run_ref(e)
-  end
+  if not challenge then return end
 
   Setup.active = true
   G.challenge_tab = challenge

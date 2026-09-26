@@ -1,0 +1,29 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+# A Customize button beside PLAY on the challenge description panel.
+#
+# PLAY keeps vanilla behaviour -- start now, White stake, the challenge's own
+# deck -- so the common case costs no extra click. Customize opens the game's
+# New Run screen with the challenge held, where its deck and stake pickers do
+# the work (smods/rules_challenge_setup.lua).
+#
+# Inserted as a sibling before the play button inside the same row, so the two
+# sit side by side; the row lays its children out horizontally. PLAY's minw
+# drops from 9 to 4.3 to make space, which is why the anchor line is rewritten
+# rather than merely prepended to.
+[[patches]]
+[patches.pattern]
+target = "functions/UI_definitions.lua"
+pattern = '''{n=G.UIT.R, config={align = "cm", padding = 0.1, minh = 0.7, minw = 9, r = 0.1, hover = true, colour = G.C.BLUE, button = "start_challenge_run", shadow = true, id = _id}, nodes={'''
+position = "at"
+payload = '''
+{n=G.UIT.R, config={align = "cm", padding = 0.1, minh = 0.7, minw = 4.3, r = 0.1, hover = true, colour = G.C.PURPLE, button = "cm_customize_challenge_run", shadow = true, id = _id}, nodes={
+  {n=G.UIT.T, config={text = "Customize", scale = 0.45, colour = G.C.UI.TEXT_LIGHT, func = 'set_button_pip', focus_args = {button = 'y', set_button_pip = true}}}
+}},
+{n=G.UIT.R, config={align = "cm", padding = 0.1, minh = 0.7, minw = 4.3, r = 0.1, hover = true, colour = G.C.BLUE, button = "start_challenge_run", shadow = true, id = _id}, nodes={
+'''
+match_indent = true
+overwrite = true
