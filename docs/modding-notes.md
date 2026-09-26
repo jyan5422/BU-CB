@@ -180,6 +180,19 @@ negative from `Card:get_id()` and must be excluded explicitly.
   discard is free** unless you charge it yourself (`ease_discard(-1)` plus the
   `discards_used` bump). The gate to open is `#G.hand.highlighted <= 0` in
   `G.FUNCS.can_discard`.
+- **Opening a branch the game never enters means owning everything on it.**
+  That same discard function does three things *before* the guard -- sets
+  `G.CONTROLLER.interrupt.focus`, saves cardarea focus, and consumes the click
+  -- while everything that undoes them sits *inside* the body. The Discard
+  button is `one_press`, so `engine/ui.lua` sets `disable_button` on click and
+  nothing re-arms it; a real discard re-arms it only as a **side effect** of
+  `G.STATE = DRAW_TO_HAND` rebuilding the UI. So allowing a zero-card discard
+  killed the button for the rest of the round, while `can_discard` kept
+  painting it red every frame -- enabled-looking and dead.
+
+  The general shape: when you enable a path vanilla never takes, read what runs
+  *before* the guard you are bypassing, and undo it yourself. Anything the real
+  path fixes only as a side effect of a state change will not happen.
 - `G.GAME.starting_params.discard_limit` is an SMODS addition meaning
   **cards per discard** (default 5), not the number of discards
   (`starting_params.discards`). Easy to misread when reducing discards.

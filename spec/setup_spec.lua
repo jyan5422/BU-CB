@@ -150,3 +150,36 @@ describe("the deck precedence patch", function()
       "an ordinary run must be untouched")
   end)
 end)
+
+-- A zero-card discard is a path vanilla never takes, so the parts of the
+-- discard function that keep the UI alive never run for it.
+describe("the zero-card pass", function()
+  local module
+
+  setup(function()
+    local f = assert(io.open("smods/rules_climb_wiring.lua"))
+    module = f:read("*a")
+    f:close()
+  end)
+
+  -- Discard is a one_press button: engine/ui.lua sets disable_button on click
+  -- and nothing re-arms it. A real discard re-arms it by side effect, setting
+  -- G.STATE = DRAW_TO_HAND which rebuilds the UI. A pass changes no state, so
+  -- the flag survived and discard was dead for the rest of the round.
+  it("re-arms the one-press discard button", function()
+    assert.is_truthy(module:match("disable_button = nil"),
+      "a pass must re-arm the button the click disabled")
+  end)
+
+  -- The function sets interrupt.focus before the guard it then skips, and
+  -- every path that lifts it lives inside the body.
+  it("lifts the focus interrupt the discard set on the way in", function()
+    assert.is_truthy(module:match("interrupt%.focus = false"))
+  end)
+
+  -- The charge is the other thing the skipped body would have done.
+  it("still charges the discard", function()
+    assert.is_truthy(module:match("ease_discard%(%-1%)"))
+    assert.is_truthy(module:match("discards_used"))
+  end)
+end)

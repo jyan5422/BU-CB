@@ -203,10 +203,43 @@ G.FUNCS.discard_cards_from_highlighted = function(e, hook)
     -- With cards selected the game charges the discard itself. With none, its
     -- whole body is skipped by `if highlighted_count > 0`, so the charge has
     -- to happen here or a zero-card pass would be free.
-    if zero_card and ease_discard then
-      ease_discard(-1)
-      if G.GAME.current_round then
-        G.GAME.current_round.discards_used = (G.GAME.current_round.discards_used or 0) + 1
+    if zero_card then
+      if ease_discard then
+        ease_discard(-1)
+        if G.GAME.current_round then
+          G.GAME.current_round.discards_used = (G.GAME.current_round.discards_used or 0) + 1
+        end
+      end
+      -- Everything the skipped body would have done for the UI has to be done
+      -- here too. Two things leak otherwise, and both leave the Discard button
+      -- looking enabled while doing nothing for the rest of the round:
+      --
+      -- The button is one_press, so engine/ui.lua sets disable_button on click
+      -- and nothing re-arms it. A real discard re-arms it by side effect --
+      -- it sets G.STATE = DRAW_TO_HAND, which rebuilds the UI with a fresh
+      -- node. A pass changes no state, so the flag survives.
+      --
+      -- And the function sets G.CONTROLLER.interrupt.focus on the way in,
+      -- before the guard, while every path that lifts it sits inside the body.
+      --
+      -- Observed in play: discard dead for the rest of a round after one pass,
+      -- with the button still painted red by can_discard every frame.
+      if e and e.config and G.E_MANAGER then
+        G.E_MANAGER:add_event(Event({
+          trigger = "after",
+          delay = 0.1,
+          blockable = false,
+          func = function()
+            e.config.disable_button = nil
+            return true
+          end,
+        }))
+      end
+      if G.CONTROLLER then
+        G.CONTROLLER.interrupt.focus = false
+        if G.CONTROLLER.recall_cardarea_focus then
+          G.CONTROLLER:recall_cardarea_focus("hand")
+        end
       end
     end
     Climb.clear_lock()
