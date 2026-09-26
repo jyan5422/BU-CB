@@ -125,6 +125,25 @@ function M.load()
   Blind, Card = {}, {}
   Sprite = function() end
   UIBox_button = function(t) return { config = t } end
+
+  -- Vanilla get_blind_amount, curves included. mechanics.lua captures this as
+  -- its reference and measures the stake ratio off it, so a stub returning a
+  -- constant would make the scaling specs assert nothing.
+  function get_blind_amount(ante)
+    local k = 0.75
+    local curves = {
+      { 300, 800, 2000, 5000, 11000, 20000, 35000, 50000 },
+      { 300, 900, 2600, 8000, 20000, 36000, 60000, 100000 },
+      { 300, 1000, 3200, 9000, 25000, 60000, 110000, 200000 },
+    }
+    local scaling = (G.GAME and G.GAME.modifiers and G.GAME.modifiers.scaling) or 1
+    local amounts = curves[scaling] or curves[1]
+    if ante < 1 then return 100 end
+    if ante <= 8 then return amounts[ante] end
+    local a, b, c, d = amounts[8], 1.6, ante - 8, 1 + 0.2 * (ante - 8)
+    local amount = math.floor(a * (b + (k * c) ^ d) ^ c)
+    return amount - amount % (10 ^ math.floor(math.log10(amount) - 1))
+  end
   localize = function() return "" end
   sendInfoMessage = function() end
   sendWarnMessage = function() end

@@ -177,6 +177,46 @@ function ChallengeMod.destroy_random_cards(amount)
 end
 
 local get_blind_amount_ref = get_blind_amount
+
+-- How much harder the chosen stake makes this ante, as a ratio.
+--
+-- Stakes raise blind sizes through G.GAME.modifiers.scaling, which vanilla
+-- get_blind_amount reads to pick one of three curves (Green sets it to 2,
+-- Purple to 3). cm_scaling replaces that function's whole table, so it never
+-- consulted scaling at all and a challenge played on Gold used White-stake
+-- blinds. Invisible until the stake became selectable, because it was always 1.
+--
+-- Measured off the vanilla function rather than copied from it: the tables are
+-- the game's to change, and a duplicate here would drift silently. Swapping
+-- the global for the length of two calls keeps that honest.
+local function stake_ratio(ante)
+  local scaling = G.GAME and G.GAME.modifiers and G.GAME.modifiers.scaling
+  if not scaling or scaling <= 1 then return 1 end
+  if not get_blind_amount_ref then return 1 end
+
+  G.GAME.modifiers.scaling = 1
+  local ok_base, base = pcall(get_blind_amount_ref, ante)
+  G.GAME.modifiers.scaling = scaling
+  local ok_raised, raised = pcall(get_blind_amount_ref, ante)
+
+  if not (ok_base and ok_raised) then return 1 end
+  if type(base) ~= "number" or type(raised) ~= "number" or base <= 0 then return 1 end
+  return raised / base
+end
+
+-- Same shaping vanilla applies to an extrapolated blind, so a scaled amount
+-- reads like a blind rather than an arithmetic result.
+local function round_blind(amount)
+  if amount < 10 then return math.floor(amount + 0.5) end
+  return amount - amount % (10 ^ math.floor(math.log10(amount) - 1))
+end
+
+local function apply_stake(amount, ante)
+  local ratio = stake_ratio(ante)
+  if ratio == 1 then return amount end
+  return round_blind(amount * ratio)
+end
+
 function get_blind_amount(ante)
   local k = 0.75
   if G.GAME.modifiers.cm_scaling then
@@ -186,11 +226,11 @@ function get_blind_amount(ante)
     end
     if ante <= 8 then
       if G.GAME.modifiers.cm_all_blind_increase then
-        return amounts[ante]*tonumber(G.GAME.modifiers.cm_all_blind_increase)
+        return apply_stake(amounts[ante], ante)*tonumber(G.GAME.modifiers.cm_all_blind_increase)
       end
-      return amounts[ante]
+      return apply_stake(amounts[ante], ante)
     end
-    local a, b, c, d = amounts[8], 1.6, ante - 8, 1 + 0.2 * (ante - 8)
+    local a, b, c, d = apply_stake(amounts[8], 8), 1.6, ante - 8, 1 + 0.2 * (ante - 8)
     local amount = math.floor(a * (b + (k * c) ^ d) ^ c)
     amount = amount - amount % (10 ^ math.floor(math.log10(amount) - 1))
     if G.GAME.modifiers.cm_all_blind_increase then
