@@ -38,6 +38,7 @@ load_file("smods/rules_straights.lua")
 load_file("smods/rules_draw.lua")
 load_file("smods/rules_sort.lua")
 load_file("smods/rules_climb_wiring.lua")
+load_file("smods/rules_challenge_setup.lua")
 
 ChallengeMod.localizeChalNames()
 ChallengeMod.localizeDailyNames()

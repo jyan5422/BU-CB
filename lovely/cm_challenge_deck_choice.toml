@@ -1,0 +1,40 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+# Let a chosen deck beat the one a challenge declares.
+#
+# This one line is the whole reason challenges are locked to their own deck:
+#
+#   local selected_back = saveTable and saveTable.BACK.name
+#     or (args.challenge and args.challenge.deck and args.challenge.deck.type)
+#     or (self.GAME.viewed_back and self.GAME.viewed_back.name)
+#     ...
+#
+# The challenge's deck sits AHEAD of the player's viewed back, so whatever they
+# picked is discarded. Putting an explicit override in front of it -- and only
+# when the player actually moved off the challenge's own deck -- leaves the
+# default path byte-identical.
+#
+# Only the BACK is affected. The challenge's card list is chosen further down
+# (`if _de and _de.cards then card_protos = _de.cards end`), which
+# short-circuits deck generation, so a deck's effect cannot rewrite a list the
+# challenge supplied. The back's own starting_params changes still apply, which
+# is what "on top of the challenge" means: Red Deck's +1 discard lands before
+# the challenge's own discard modifier adjusts it.
+[[patches]]
+[patches.pattern]
+target = "game.lua"
+pattern = "local selected_back = saveTable and saveTable.BACK.name or (args.challenge and args.challenge.deck and args.challenge.deck.type) or (self.GAME.viewed_back and self.GAME.viewed_back.name) or self.GAME.selected_back and self.GAME.selected_back.name or 'Red Deck'"
+position = "at"
+payload = """
+local _cm_back = nil
+if ChallengeMod and ChallengeMod.Setup and ChallengeMod.Setup.deck_overridden
+  and args.challenge and ChallengeMod.Setup.deck_overridden() then
+  _cm_back = self.GAME.viewed_back and self.GAME.viewed_back.name or nil
+end
+local selected_back = saveTable and saveTable.BACK.name or _cm_back or (args.challenge and args.challenge.deck and args.challenge.deck.type) or (self.GAME.viewed_back and self.GAME.viewed_back.name) or self.GAME.selected_back and self.GAME.selected_back.name or 'Red Deck'
+"""
+match_indent = true
+overwrite = true
