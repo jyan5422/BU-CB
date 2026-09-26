@@ -100,6 +100,16 @@ describe("the customize button", function()
     assert.is_truthy(module:match("G%.FUNCS%.cm_customize_challenge_run"))
   end)
 
+  -- Sibling R nodes stack vertically; C nodes sit side by side. Using R put
+  -- Customize above Play, which is not what "beside" means.
+  it("puts the two buttons side by side, not stacked", function()
+    local payload = patch:match('position = "at"(.*)')
+    for node in payload:gmatch("{n=(G%.UIT%.[RC]),[^\n]*button =") do
+      assert.equal("G.UIT.C", node,
+        "a button sibling must be a column or it stacks vertically")
+    end
+  end)
+
   -- Both buttons share one row, so they have to fit in it.
   it("makes room for both", function()
     -- Only the payload: the anchor above it still quotes the original minw.
