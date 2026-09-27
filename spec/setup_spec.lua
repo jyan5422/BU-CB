@@ -26,18 +26,32 @@ describe("challenge deck override", function()
   -- The default path has to stay byte-identical: leave the picker on the
   -- challenge's own deck and nothing about the run changes.
   it("reports no override while the challenge deck is selected", function()
+    Setup.active = true
     _G.G.GAME.viewed_back = { name = "Challenge Deck" }
     assert.is_false(Setup.deck_overridden())
   end)
 
   it("reports an override once another deck is picked", function()
+    Setup.active = true
     _G.G.GAME.viewed_back = { name = "Red Deck" }
     assert.is_true(Setup.deck_overridden())
   end)
 
   it("reports no override when nothing has been viewed", function()
+    Setup.active = true
     _G.G.GAME.viewed_back = nil
     assert.is_false(Setup.deck_overridden())
+  end)
+
+  -- The bug this missed. G.GAME.viewed_back survives from the ordinary New Run
+  -- screen, so a challenge started straight from PLAY saw a "chosen" deck it
+  -- had never been given -- Big Wee launched on whichever deck single player
+  -- happened to be sitting on. Only the Customize flow may override.
+  it("reports no override for a challenge started without customizing", function()
+    Setup.active = false
+    _G.G.GAME.viewed_back = { name = "Red Deck" }
+    assert.is_false(Setup.deck_overridden(),
+      "a stale viewed deck must not override the challenge's own")
   end)
 end)
 

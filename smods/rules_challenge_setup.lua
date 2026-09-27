@@ -147,7 +147,14 @@ end
 
 --- Did the player pick a deck other than the one the challenge ships with?
 --- The precedence patch calls this; when it is false, nothing changes.
+---
+--- Setup.active is the load-bearing half. G.GAME.viewed_back persists from
+--- whatever deck was last looked at in the ordinary New Run screen, so
+--- comparing it alone said "overridden" for a challenge started straight from
+--- PLAY -- and Big Wee launched on whichever deck single player was sitting
+--- on. Only a deck chosen through the Customize flow counts.
 function Setup.deck_overridden()
+  if not Setup.active then return false end
   if not G.GAME then return false end
   local viewed = G.GAME.viewed_back and G.GAME.viewed_back.name
   if not viewed then return false end

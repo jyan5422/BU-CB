@@ -27,6 +27,17 @@ Two rules that would have caught all four:
 And assert observable effects — score, sort order, placement — not the
 condition you happen to be thinking about.
 
+Two more instances since, both the same shape:
+
+| stub assumed | game actually does |
+|---|---|
+| the code only runs inside my own flow | it runs on every path into `start_run` |
+| an alert is the only thing on screen | every rule reacting to that moment is too |
+
+The first let a challenge started straight from PLAY inherit whichever deck
+single player was sitting on, because `G.GAME.viewed_back` persists and the
+override never checked that the player had actually opened the picker.
+
 ## Diagnose by looking, not by reasoning
 
 Three UI bugs in a row were misdiagnosed on the first pass, each time by
