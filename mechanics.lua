@@ -9,22 +9,22 @@ function ChallengeMod.localizeMechDescriptions()
   G.localization.misc.v_text.ch_c_cm_pinned_jokers = { "All Jokers are {C:attention}Pinned{}}" }
   -- Key must match the rules.custom id exactly; challenges use cm_decreasing_handsize.
   G.localization.misc.v_text.ch_c_cm_decreasing_handsize = { "Hand size {C:attention}Decreases{} each Ante" }
-  G.localization.misc.v_text.ch_c_cm_random_deck = { "Your deck is {C:attention}randomized{}" }
+  G.localization.misc.v_text.ch_c_cm_random_deck = { "Your deck is {C:attention}Randomized{}" }
   G.localization.misc.v_text.ch_c_cm_mult_dollar_cap = { "{C:blue}Mult{} cannot exceed the current {C:money}$" }
   G.localization.misc.v_text.ch_c_cm_climb = { "{C:attention}Climb{}: same size, higher rank" }
-  G.localization.misc.v_text.ch_c_cm_pass = { "{C:red}#1#{} discards, earns a {C:red}discard{} by {C:attention}climbing{}" }
-  G.localization.misc.v_text.ch_c_cm_climb_refund = { "Each {C:attention}climb{} earns a {C:red}discard{}" }
+  G.localization.misc.v_text.ch_c_cm_pass = { "{C:red}#1#{} discards, earns a {C:red}Discard{} by {C:attention}Climbing{}" }
+  G.localization.misc.v_text.ch_c_cm_climb_refund = { "Each {C:attention}Climb{} earns a {C:red}Discard{}" }
   G.localization.misc.v_text.ch_c_cm_shed_bonus = { "{C:attention}Shed{} your cards for up to {X:mult,C:white}X4{}" }
   G.localization.misc.v_text.ch_c_cm_rank_chips = { "{C:attention}2{} is the highest rank" }
-  G.localization.misc.v_text.ch_c_cm_suit_chips = { "{C:spades}Spades{} > {C:hearts}hearts{} > {C:clubs}clubs{} > {C:diamonds}diamonds{}" }
+  G.localization.misc.v_text.ch_c_cm_suit_chips = { "{C:spades}Spades{} > {C:hearts}Hearts{} > {C:clubs}Clubs{} > {C:diamonds}Diamonds{}" }
   G.localization.misc.v_text.ch_c_cm_wrap_straights = { "{C:attention}Straights{} may wrap around" }
   G.localization.misc.v_text.ch_c_cm_no_redraw = { "{C:attention}+#1#{} hand size, dealt once per round" }
   G.localization.misc.v_text.ch_c_all_rental = { "All Jokers are {C:attention}Rental{}" }
   G.localization.misc.v_text.ch_c_cm_force_hand = { "Played hands must contain a {C:blue}#1#{}" }
   G.localization.misc.v_text.ch_c_cm_negative_interest = { "Money is lost from {C:attention}Interest{}" }
   G.localization.misc.v_text.ch_c_cm_no_overscoring = { "{C:attention}Blind{} score must not exceed {C:green}#1#%{}" }
-  G.localization.misc.v_text.ch_c_no_shop_planets = { "Planets no longer appear in the {C:attention}shop{}" }
-  G.localization.misc.v_text.ch_c_no_shop_tarots = { "Tarots no longer appear in the {C:attention}shop{}" }
+  G.localization.misc.v_text.ch_c_no_shop_planets = { "Planets no longer appear in the {C:attention}Shop{}" }
+  G.localization.misc.v_text.ch_c_no_shop_tarots = { "Tarots no longer appear in the {C:attention}Shop{}" }
   G.localization.misc.v_text.ch_c_cm_scaling = { "Custom ante scaling" }
   G.localization.misc.v_text.ch_c_set_seed = {"Set Seed: {C:attention}???{}"}
   -- G.localization.misc.v_text.ch_c_cm_scaling_manual = { "Custom ante and blind scaling" }
@@ -40,11 +40,11 @@ function ChallengeMod.localizeMechDescriptions()
   G.localization.misc.v_text.ch_c_cm_draw_deck = { "Your handsize is set to your deck size at the start of every round" }
   G.localization.misc.v_text.ch_c_cm_all_blind_increase = { "Blinds are all {C:attention}#1#{} times larger" }
   G.localization.misc.v_text.ch_c_cm_hands_cost = { "Playing a hand costs you {C:attention}#1#{} dollars." }
-  G.localization.misc.v_text.ch_c_cm_debuff_cards = { "All playing cards are {C:attention}debuffed{}" }
+  G.localization.misc.v_text.ch_c_cm_debuff_cards = { "All playing cards are {C:attention}Debuffed{}" }
   G.localization.misc.v_text.ch_c_cm_expelled_1 = {'Bans all {C:attention}Jokers, {C:tarot}Tarots, {C:spectral}Spectrals,'}
   G.localization.misc.v_text.ch_c_cm_expelled_2 = {'{C:planet}Planets{} and {C:attention}Tags{} placed in the'}
   G.localization.misc.v_text.ch_c_cm_expelled_3 = {'top two tiers of BU\'s tier lists'}
-  G.localization.misc.v_text.ch_c_cm_omit_digits = {'Omits all numerical {C:attention}digits'}
+  G.localization.misc.v_text.ch_c_cm_omit_digits = {'Omits all numerical {C:attention}Digits'}
   G.localization.misc.v_text.ch_c_cm_lose_money_on_select = {'Lose {C:money}$1{} whenever a card is selected'}
   -- Daily Modifiers
   G.localization.misc.v_text.ch_c_dm_dollars_per_hand = {"Start with only 1 discard, but you receive {c:money}#1#{} for each remaining hand"}

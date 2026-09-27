@@ -482,3 +482,34 @@ describe("the pass penalty and the climb refund", function()
     assert.is_nil(apply(0).modifiers.cm_climb_refund)
   end)
 end)
+
+-- Highlighted words are the game's own emphasis, and Balatro capitalises the
+-- terms it highlights (Tarot, Planet, Chips, Club, Spade). Ours drifted --
+-- "hearts", "clubs", "climb", "discard" -- which reads as a different voice
+-- next to vanilla text in the same panel.
+describe("rule text capitalisation", function()
+  local mod
+
+  setup(function()
+    mod = harness.load()
+  end)
+
+  it("capitalises every highlighted word", function()
+    local offenders = {}
+    for key, entry in pairs(mod.v_text or {}) do
+      local text = type(entry) == "table" and entry[1] or entry
+      if type(text) == "string" then
+        -- {C:attention}word{} and {X:mult,C:white}X4{} alike; the opening
+        -- brace pair is the highlight, the bare {} closes it.
+        for word in text:gmatch("{[CX]:[%a_,:]+}(%a[%w ]*)}?") do
+          local first = word:sub(1, 1)
+          if first:match("%l") then
+            offenders[#offenders + 1] = ("%s: %q"):format(key, word)
+          end
+        end
+      end
+    end
+    assert.equal(0, #offenders,
+      "lowercase highlighted words:\n  " .. table.concat(offenders, "\n  "))
+  end)
+end)
