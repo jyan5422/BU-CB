@@ -8,10 +8,10 @@ local Climb = ChallengeMod.Climb
 -- queue another while one is still up.
 local alert_until = 0
 
--- Last shed multiplier announced on selection. Declared up here because
--- debuff_hand resets it when a hand is committed, and a Lua local is not
--- visible above its declaration.
-local shed_flashed = 1
+-- Last selection announcement, cleared when a hand is committed so the next
+-- selection speaks again. Declared up here because debuff_hand resets it and a
+-- Lua local is not visible above its declaration.
+local selection_flashed = ""
 
 local function alert(text, opts)
   if not (G.E_MANAGER and attention_text and love and love.timer) then return end
@@ -117,7 +117,7 @@ function Blind:debuff_hand(cards, hand, handname, check)
       if not check then
         local continued = lock ~= nil
         ChallengeMod.Climb.last_reason = nil
-        shed_flashed = 1
+        selection_flashed = ""
         Climb.set_lock(count, handname, played)
         -- Holding the trick means you never had to pass, so the pass comes
         -- back. Discards buy passes and joker triggers, never score, so this
@@ -168,43 +168,40 @@ end
 
 --- The waste charge, announced where the shed payout is. Money-coloured so it
 --- reads as a cost rather than a score event.
+--- Below the played cards when there ARE played cards, centred otherwise.
+--- "Under the play area" is only clear of the hand while the play area holds
+--- something; on a discard it lands squarely on the hand, which is how the
+--- charge came to print across the cards.
 function ChallengeMod.Climb.alert_money(owed)
+  local has_play = G.play and G.play.cards and #G.play.cards > 0
   alert(("-$%s Wasted"):format(tostring(owed)), {
-    colour = G.C.MONEY, hold = 1.2, force = true, under_play = true,
+    colour = G.C.MONEY, hold = 1.2, force = true, under_play = has_play,
   })
 end
 
--- The waste tax the current selection would cost. Same once-per-change rule as
--- the shed flash: the preview refreshes far too often to announce every call.
-local waste_flashed = 0
-function ChallengeMod.Climb.waste_preview_flash(owed)
-  owed = owed or 0
-  if owed == waste_flashed then return end
-  waste_flashed = owed
-  if owed > 0 then
-    alert(("-$%s if played"):format(tostring(owed)),
-      { colour = G.C.MONEY, hold = 1.1, force = true })
-  end
-end
-
--- Shed bonus on selection. The preview mult already includes it
--- (lovely/cm_shed_preview.toml), but a number quietly doubling is easy to
--- miss, so name it once when the selection starts qualifying.
+-- Everything the current selection is worth, in ONE message.
 --
--- Keyed on the value rather than rate limited: selecting the last card is a
--- deliberate act and deserves the flash every time it happens, while the
--- preview refreshes far too often to announce on each call.
-function ChallengeMod.Climb.shed_preview_flash(x)
-  x = x or 1
-  if x == shed_flashed then return end
-  shed_flashed = x
-  if x > 1 then
-    -- No sound here. The Xmult sound marks the payout actually happening;
-    -- firing it while the player is still hovering a selection makes a
-    -- prediction sound like a scoring event, and it repeats every time the
-    -- selection changes.
-    alert(Climb.shed_label(x), { colour = G.C.MULT, hold = 1.1, force = true })
-  end
+-- The shed bonus and the waste tax both fire on a selection change and both
+-- have to be forced, so as separate alerts they printed on top of each other
+-- at the same spot -- seen in play as unreadable overlapping text. Composing
+-- them means the player reads one line however many rules have something to
+-- say.
+function ChallengeMod.Climb.selection_flash(shed_x, waste_cost)
+  shed_x, waste_cost = shed_x or 1, waste_cost or 0
+
+  local parts = {}
+  if shed_x > 1 then parts[#parts + 1] = Climb.shed_label(shed_x) end
+  if waste_cost > 0 then parts[#parts + 1] = ("-$%s"):format(waste_cost) end
+
+  local text = table.concat(parts, "   ")
+  if text == selection_flashed then return end
+  selection_flashed = text
+  if text == "" then return end
+
+  -- Money colour only when the charge is the whole message; otherwise the
+  -- shed payout is the headline and should read as one.
+  local colour = (shed_x > 1) and G.C.MULT or G.C.MONEY
+  alert(text, { colour = colour, hold = 1.1, force = true })
 end
 
 -- Any discard is a pass: it clears the trick, whether or not cards were
@@ -228,8 +225,9 @@ G.FUNCS.discard_cards_from_highlighted = function(e, hook)
 
   local ret = discard_ref and discard_ref(e, hook)
 
+  local wasted_cost = 0
   if ChallengeMod.Waste and ChallengeMod.Waste.tax_discard then
-    ChallengeMod.Waste.tax_discard(discarded)
+    wasted_cost = ChallengeMod.Waste.tax_discard(discarded) or 0
   end
 
   if passing then
@@ -276,7 +274,10 @@ G.FUNCS.discard_cards_from_highlighted = function(e, hook)
       end
     end
     Climb.clear_lock()
-    alert("pass", { colour = G.C.BLUE, hold = 1.2, force = true })
+    -- One message, not two. The waste charge rides along with the pass rather
+    -- than firing its own alert on top of it.
+    local text = wasted_cost > 0 and ("Pass  -$%s"):format(wasted_cost) or "Pass"
+    alert(text, { colour = G.C.BLUE, hold = 1.2, force = true })
   end
   return ret
 end

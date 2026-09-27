@@ -96,20 +96,26 @@ function Waste.tax_play(played, scoring)
 end
 
 --- Charge for a discard.
+--- Charge for a discard. Silent: the caller says "Pass" and folds the amount
+--- into that, rather than stacking a second alert on top of it.
 function Waste.tax_discard(cards)
   if not Waste.active() then return 0 end
   local owed = Waste.charge_for(Waste.count_discarded(cards))
-  Waste.charge(owed)
+  Waste.charge(owed, true)
   return owed
 end
 
---- Take the money and say so. ease_dollars animates the counter and handles
---- going negative -- bankrupt_at only gates purchases, so a charge can put a
---- player in the red without ending the run.
-function Waste.charge(owed)
+--- Take the money. ease_dollars animates the counter and handles going
+--- negative -- bankrupt_at only gates purchases, so a charge can put a player
+--- in the red without ending the run.
+---
+--- `silent` suppresses the announcement for callers that fold the amount into
+--- a message of their own. A discard already says "Pass", and two forced
+--- alerts at once overprint each other.
+function Waste.charge(owed, silent)
   if not owed or owed <= 0 then return end
   if ease_dollars then ease_dollars(-owed) end
-  if ChallengeMod.Climb and ChallengeMod.Climb.alert_money then
+  if not silent and ChallengeMod.Climb and ChallengeMod.Climb.alert_money then
     ChallengeMod.Climb.alert_money(owed)
   end
 end

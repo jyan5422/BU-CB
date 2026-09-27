@@ -21,13 +21,17 @@ local _cm_mult = G.GAME.hands[text].mult
 if ChallengeMod and ChallengeMod.Climb and ChallengeMod.Climb.shed_preview_xmult then
   local _cm_x = ChallengeMod.Climb.shed_preview_xmult(self, text)
   _cm_mult = _cm_mult * _cm_x
-  if ChallengeMod.Climb.shed_preview_flash then ChallengeMod.Climb.shed_preview_flash(_cm_x) end
 end
--- The waste tax this selection would cost. Same place because `text` and
--- `poker_hands` are both in scope here and nowhere better.
-if ChallengeMod and ChallengeMod.Waste and ChallengeMod.Climb
-  and ChallengeMod.Climb.waste_preview_flash then
-  ChallengeMod.Climb.waste_preview_flash(ChallengeMod.Waste.preview(self, text, poker_hands))
+-- One announcement for everything the selection is worth: the shed payout and
+-- the waste charge would otherwise be two forced alerts at the same spot.
+-- Done here because `text` and `poker_hands` are both in scope and nowhere
+-- better is.
+if ChallengeMod and ChallengeMod.Climb and ChallengeMod.Climb.selection_flash then
+  local _cm_waste = 0
+  if ChallengeMod.Waste and ChallengeMod.Waste.preview then
+    _cm_waste = ChallengeMod.Waste.preview(self, text, poker_hands) or 0
+  end
+  ChallengeMod.Climb.selection_flash(_cm_x, _cm_waste)
 end
 update_hand_text({immediate = true, nopulse = nil, delay = 0}, {handname=disp_text, level=G.GAME.hands[text].level, mult = _cm_mult, chips = G.GAME.hands[text].chips})
 """

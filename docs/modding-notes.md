@@ -168,6 +168,12 @@ negative from `Card:get_id()` and must be excluded explicitly.
   and draw on top of it.
 - Sequential messages at one anchor need a delay, or they overlap. An
   `attention_text` holds ~0.9s.
+- **One event, one message.** Every rule that reacts to the same moment wants
+  to announce itself in the same place, and each will be `force`d because it is
+  a committed action -- so they print over each other. Compose the line from
+  whichever rules have something to say and fire once, rather than letting each
+  rule own an alert. Hit twice here: the shed payout against the waste charge
+  on a selection, and the pass message against the waste charge on a discard.
 
 ## Round and hand state
 
