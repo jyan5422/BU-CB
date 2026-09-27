@@ -17,10 +17,13 @@ Challenge.DATA = {
       { id = "cm_rank_chips" },
       { id = "cm_suit_chips" },
       { id = "cm_shed_bonus" },
-      -- A card that leaves your hand without contributing costs money, every
-      -- two of them. Emptying your hand is progress under cm_no_redraw, and
-      -- the shed bonus only asks whether the hand IS empty -- so dumping junk
-      -- and discarding were both rewarded and neither was priced.
+      -- Two halves of one economy. Emptying your hand is progress under
+      -- cm_no_redraw, and the shed bonus asks only whether the hand IS empty,
+      -- so dumping junk and discarding were both rewarded and neither priced.
+      -- The tax prices them; the bonus keeps frugality a reward rather than
+      -- merely the absence of a fine. Separate modifiers so either half can be
+      -- taken alone.
+      { id = "cm_frugal_bonus", value = 2 },
       { id = "cm_waste_tax", value = 2 },
       { id = "cm_wrap_straights" },
       -- +5 on the base 8 gives the 13 Big 2 deals, and breathes with any

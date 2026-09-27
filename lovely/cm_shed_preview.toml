@@ -27,11 +27,16 @@ end
 -- Done here because `text` and `poker_hands` are both in scope and nowhere
 -- better is.
 if ChallengeMod and ChallengeMod.Climb and ChallengeMod.Climb.selection_flash then
-  local _cm_waste = 0
+  -- One signed figure: the strict rule makes fine and payment mutually
+  -- exclusive, so at most one of these is non-zero.
+  local _cm_money = 0
   if ChallengeMod.Waste and ChallengeMod.Waste.preview then
-    _cm_waste = ChallengeMod.Waste.preview(self, text, poker_hands) or 0
+    _cm_money = _cm_money - (ChallengeMod.Waste.preview(self, text, poker_hands) or 0)
   end
-  ChallengeMod.Climb.selection_flash(_cm_x, _cm_waste)
+  if ChallengeMod.Frugal and ChallengeMod.Frugal.preview then
+    _cm_money = _cm_money + (ChallengeMod.Frugal.preview(self, text, poker_hands) or 0)
+  end
+  ChallengeMod.Climb.selection_flash(_cm_x, _cm_money)
 end
 update_hand_text({immediate = true, nopulse = nil, delay = 0}, {handname=disp_text, level=G.GAME.hands[text].level, mult = _cm_mult, chips = G.GAME.hands[text].chips})
 """

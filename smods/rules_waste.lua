@@ -95,7 +95,6 @@ function Waste.tax_play(played, scoring)
   return owed
 end
 
---- Charge for a discard.
 --- Charge for a discard. Silent: the caller says "Pass" and folds the amount
 --- into that, rather than stacking a second alert on top of it.
 function Waste.tax_discard(cards)
@@ -116,7 +115,7 @@ function Waste.charge(owed, silent)
   if not owed or owed <= 0 then return end
   if ease_dollars then ease_dollars(-owed) end
   if not silent and ChallengeMod.Climb and ChallengeMod.Climb.alert_money then
-    ChallengeMod.Climb.alert_money(owed)
+    ChallengeMod.Climb.alert_money(-owed)
   end
 end
 

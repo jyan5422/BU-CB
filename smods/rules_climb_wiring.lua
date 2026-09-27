@@ -166,15 +166,20 @@ function ChallengeMod.Climb.shed_flash(x)
   })
 end
 
---- The waste charge, announced where the shed payout is. Money-coloured so it
---- reads as a cost rather than a score event.
---- Below the played cards when there ARE played cards, centred otherwise.
---- "Under the play area" is only clear of the hand while the play area holds
---- something; on a discard it lands squarely on the hand, which is how the
---- charge came to print across the cards.
-function ChallengeMod.Climb.alert_money(owed)
+--- The waste charge or the frugality payment, announced where the shed payout
+--- is. Signed, because under the strict rule the two are mutually exclusive:
+--- zero unscored cards means no fine, two or more means no payment.
+---
+--- "Scoring" and "Unscored" are the game's own words -- Splash says "counts in
+--- scoring" and existing joker text says "unscored card" -- so the flash and
+--- the rules panel read as one vocabulary.
+function ChallengeMod.Climb.alert_money(amount)
+  if not amount or amount == 0 then return end
+  local text = amount > 0
+    and ("+$%s Scoring"):format(amount)
+    or ("-$%s Unscored"):format(-amount)
   local has_play = G.play and G.play.cards and #G.play.cards > 0
-  alert(("-$%s Wasted"):format(tostring(owed)), {
+  alert(text, {
     colour = G.C.MONEY, hold = 1.2, force = true, under_play = has_play,
   })
 end
@@ -186,12 +191,14 @@ end
 -- at the same spot -- seen in play as unreadable overlapping text. Composing
 -- them means the player reads one line however many rules have something to
 -- say.
-function ChallengeMod.Climb.selection_flash(shed_x, waste_cost)
-  shed_x, waste_cost = shed_x or 1, waste_cost or 0
+function ChallengeMod.Climb.selection_flash(shed_x, money)
+  shed_x, money = shed_x or 1, money or 0
 
   local parts = {}
   if shed_x > 1 then parts[#parts + 1] = Climb.shed_label(shed_x) end
-  if waste_cost > 0 then parts[#parts + 1] = ("-$%s"):format(waste_cost) end
+  if money ~= 0 then
+    parts[#parts + 1] = money > 0 and ("+$%s"):format(money) or ("-$%s"):format(-money)
+  end
 
   local text = table.concat(parts, "   ")
   if text == selection_flashed then return end

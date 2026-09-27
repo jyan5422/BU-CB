@@ -1,0 +1,25 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 10
+
+# cm_frugal_bonus: pay for a hand where every card scored.
+#
+# Same anchor as the waste tax, which is where the scoring hand is first known
+# and still in scope, inside the branch that only runs for a hand that was not
+# thrown away. Separate patch rather than a shared one so each rule owns its
+# own plumbing; priority orders them, and under the strict rule they are
+# mutually exclusive anyway -- zero unscored cards means no fine, and two or
+# more means no payment.
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "check_for_unlock({type = 'hand', handname = text, disp_text = non_loc_disp_text, scoring_hand = scoring_hand, full_hand = G.play.cards})"
+position = "after"
+payload = """
+if ChallengeMod and ChallengeMod.Frugal and ChallengeMod.Frugal.pay_play then
+  ChallengeMod.Frugal.pay_play(G.play.cards, scoring_hand)
+end
+"""
+match_indent = true
+overwrite = false

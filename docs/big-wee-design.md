@@ -356,6 +356,47 @@ no chips.
 counterplay rather than special-cased: a joker that answers a challenge rule is
 the kind of interaction the game is made of.
 
+### 10. `cm_frugal_bonus` — a hand where every card scores pays out
+
+> +$1 per 2 cards if all Score
+
+**Strict: one unscored card forfeits the whole payment.** Paying per scoring
+card regardless would reward *playing* rather than playing clean, which is the
+distinction the rule exists to draw — with the tax alone, frugality was only
+the absence of a fine, which is not a reward.
+
+| five-card play | pays | fined | net |
+|---|---|---|---|
+| Straight, Flush, Full House, Straight Flush | $2 | — | **+$2** |
+| Two Pair, Four of a Kind | — | $0 | **$0** |
+| Three of a Kind | — | $1 | **−$1** |
+| Pair | — | $1 | **−$1** |
+| High Card | — | $2 | **−$2** |
+
+Plus a 2-card Pair **+$1**, a 3-card triple **+$1**, Two Pair as four cards
+**+$2**. A single card pays nothing (`floor(1/2)`), so dribbling out singles
+is not an income strategy — no special rule needed.
+
+**The two never both apply.** Zero unscored cards means no fine; two or more
+means no payment; exactly one means neither. The messaging relies on that to
+show a single signed figure. Asserted over the whole space rather than argued.
+
+**Separate modifiers, deliberately.** A joker wanting the gambit declares
+both; a gentler challenge can take only the bonus. A merged rule could not be
+pulled apart again. Each carries its own rate, so a generous joker can pay at 2
+inside a challenge that taxes at 3.
+
+**Costs of strict, accepted knowingly.** Four of a Kind played as five cards —
+the *legal* Big 2 form, quads plus a kicker — earns nothing, because the kicker
+is unscored. Playing it as four cards pays $2. The alternative was tolerating
+one unscored card, which handles quads but needs "at most 1 Unscored" on the
+panel forever and reads as arbitrary even though it falls out of the rounding.
+Chose the rule that states itself in seven words.
+
+**Vocabulary is the game's own.** Splash says "counts in scoring" and existing
+joker text says "unscored card", so the rules panel and the flash both use
+**Scoring** and **Unscored** rather than inventing a word.
+
 ## Decided and rejected
 
 **Failed hands cost a hand.** Same as playing an illegal hand into a boss that
