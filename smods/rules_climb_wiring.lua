@@ -166,6 +166,27 @@ function ChallengeMod.Climb.shed_flash(x)
   })
 end
 
+--- The waste charge, announced where the shed payout is. Money-coloured so it
+--- reads as a cost rather than a score event.
+function ChallengeMod.Climb.alert_money(owed)
+  alert(("-$%s Wasted"):format(tostring(owed)), {
+    colour = G.C.MONEY, hold = 1.2, force = true, under_play = true,
+  })
+end
+
+-- The waste tax the current selection would cost. Same once-per-change rule as
+-- the shed flash: the preview refreshes far too often to announce every call.
+local waste_flashed = 0
+function ChallengeMod.Climb.waste_preview_flash(owed)
+  owed = owed or 0
+  if owed == waste_flashed then return end
+  waste_flashed = owed
+  if owed > 0 then
+    alert(("-$%s if played"):format(tostring(owed)),
+      { colour = G.C.MONEY, hold = 1.1, force = true })
+  end
+end
+
 -- Shed bonus on selection. The preview mult already includes it
 -- (lovely/cm_shed_preview.toml), but a number quietly doubling is easy to
 -- miss, so name it once when the selection starts qualifying.
@@ -197,7 +218,19 @@ G.FUNCS.discard_cards_from_highlighted = function(e, hook)
     and G.hand
 
   local zero_card = passing and #G.hand.highlighted == 0
+
+  -- Snapshot before the discard empties the selection: the tax is owed on what
+  -- was thrown away, and by the time the reference returns they are gone.
+  local discarded = {}
+  if G.hand and G.hand.highlighted then
+    for i, card in ipairs(G.hand.highlighted) do discarded[i] = card end
+  end
+
   local ret = discard_ref and discard_ref(e, hook)
+
+  if ChallengeMod.Waste and ChallengeMod.Waste.tax_discard then
+    ChallengeMod.Waste.tax_discard(discarded)
+  end
 
   if passing then
     -- With cards selected the game charges the discard itself. With none, its

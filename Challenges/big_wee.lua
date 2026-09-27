@@ -17,6 +17,11 @@ Challenge.DATA = {
       { id = "cm_rank_chips" },
       { id = "cm_suit_chips" },
       { id = "cm_shed_bonus" },
+      -- A card that leaves your hand without contributing costs money, every
+      -- two of them. Emptying your hand is progress under cm_no_redraw, and
+      -- the shed bonus only asks whether the hand IS empty -- so dumping junk
+      -- and discarding were both rewarded and neither was priced.
+      { id = "cm_waste_tax", value = 2 },
       { id = "cm_wrap_straights" },
       -- +5 on the base 8 gives the 13 Big 2 deals, and breathes with any
       -- deck that already changes hand size.

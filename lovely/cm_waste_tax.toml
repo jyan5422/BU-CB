@@ -1,0 +1,23 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+# cm_waste_tax: charge for cards played that did not score.
+#
+# Anchored where the scoring hand is first known and still in scope, inside the
+# branch that runs only when the hand was NOT thrown away. A hand rejected by
+# the climb rule already costs a hand and scores nothing, so taxing it too
+# would punish the same mistake twice.
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "check_for_unlock({type = 'hand', handname = text, disp_text = non_loc_disp_text, scoring_hand = scoring_hand, full_hand = G.play.cards})"
+position = "after"
+payload = """
+if ChallengeMod and ChallengeMod.Waste and ChallengeMod.Waste.tax_play then
+  ChallengeMod.Waste.tax_play(G.play.cards, scoring_hand)
+end
+"""
+match_indent = true
+overwrite = false

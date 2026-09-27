@@ -14,6 +14,7 @@ function ChallengeMod.localizeMechDescriptions()
   G.localization.misc.v_text.ch_c_cm_climb = { "{C:attention}Climb{}: same size, higher rank" }
   G.localization.misc.v_text.ch_c_cm_pass = { "{C:red}#1#{} discards, earns a {C:red}Discard{} by {C:attention}Climbing{}" }
   G.localization.misc.v_text.ch_c_cm_climb_refund = { "Each {C:attention}Climb{} earns a {C:red}Discard{}" }
+  G.localization.misc.v_text.ch_c_cm_waste_tax = { "Every {C:attention}#1#{} cards {C:attention}Wasted{} costs {C:money}$1{}" }
   G.localization.misc.v_text.ch_c_cm_shed_bonus = { "{C:attention}Shed{} your cards for up to {X:mult,C:white}X4{}" }
   G.localization.misc.v_text.ch_c_cm_rank_chips = { "{C:attention}2{} is the highest rank" }
   G.localization.misc.v_text.ch_c_cm_suit_chips = { "{C:spades}Spades{} > {C:hearts}Hearts{} > {C:clubs}Clubs{} > {C:diamonds}Diamonds{}" }
@@ -86,6 +87,11 @@ function ChallengeMod.evaluate_rules(self, v)
     end
   elseif v.id == 'cm_climb_refund' then
     self.GAME.modifiers.cm_climb_refund = true
+  elseif v.id == 'cm_waste_tax' then
+    -- Value is cards-per-dollar, so a challenge can price waste differently
+    -- without new code. Stored as the number rather than `true` because the
+    -- rule text interpolates it.
+    self.GAME.modifiers.cm_waste_tax = tonumber(v.value) or 2
   elseif v.id == 'cm_shed_bonus' then
     self.GAME.modifiers.cm_shed_bonus = true
   elseif v.id == 'cm_rank_chips' then

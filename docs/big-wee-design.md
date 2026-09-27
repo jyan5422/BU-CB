@@ -309,6 +309,49 @@ their work) is the lever that shrinks with build strength instead of against it.
 A second thing that run exposed: `cm_climb_refund` fires on the exit hand too,
 refunding a discard at the moment the round ends and it can never be spent.
 
+### 9. `cm_waste_tax` — throwing cards away costs money
+
+> Every 2 cards wasted costs $1
+
+A wasted card is one that leaves your hand without contributing: played but
+outside the scoring hand, or discarded. Rounded **down**, so a single stray
+card is forgiven.
+
+| five-card play | scores | wasted | charge |
+|---|---|---|---|
+| High Card | 1 | 4 | $2 |
+| Pair | 2 | 3 | $1 |
+| Three of a Kind | 3 | 2 | $1 |
+| Two Pair, Four of a Kind | 4 | 1 | $0 |
+| Straight, Flush, Full House, Straight Flush | 5 | 0 | $0 |
+
+Real Big 2 combinations score every card, so **they are never taxed** — the
+rule falls entirely on junk.
+
+**What it fixes.** With no redraw, emptying your hand is progress, and
+`cm_shed_bonus` asks only whether the hand *is* empty, never how it got that
+way. So the two cheapest routes to empty were the two most wasteful: dumping
+five junk cards as a High Card cost one hand and nothing else, and a discard
+was a free permanent hand-size reduction. Both rewarded, neither priced.
+Reported from play as "being wasteful is only rewarded but not punished".
+
+**Money rather than hands or score**, deliberately. It bites hardest early,
+when a run is fragile and the junk opener is most tempting, and it can never
+make a round unwinnable the way another lost hand could — the failure mode the
+`-2` discard change had just fixed. `bankrupt_at` only gates purchases, so a
+charge can put a player in the red without ending the run.
+
+**Debuffed cards are exempt**, played or discarded. They cannot score whatever
+the player does, so billing them would charge for a boss's effect rather than a
+choice — and clearing dead cards is the correct response to the blind, not
+something to fine. In practice a debuffed card usually sits *inside* the
+scoring hand anyway, since the hand still evaluates and the card merely yields
+no chips.
+
+**Splash makes waste impossible**, since every card scores. That is left as
+counterplay rather than special-cased: a joker that answers a challenge rule is
+the kind of interaction the game is made of.
+
 ## Decided and rejected
 
 **Failed hands cost a hand.** Same as playing an illegal hand into a boss that
