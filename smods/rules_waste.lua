@@ -40,7 +40,7 @@ function Waste.charge_for(count)
   return math.floor(count / Waste.cards_per_dollar())
 end
 
---- Wasted cards in a played hand: those not in the scoring hand.
+--- Wasted cards among `played`: those not in `scoring`.
 ---
 --- Debuffed cards are never counted. They cannot score whatever the player
 --- does, so taxing them would charge for a boss's effect rather than for a
@@ -62,18 +62,28 @@ function Waste.count_played(played, scoring)
   return wasted
 end
 
---- Wasted cards in a discard: all of them, since none contributed.
+--- Wasted cards in a discard, judged exactly as a play would be.
 ---
---- Debuffed cards are exempt here too, and that is the right incentive: dead
---- cards are exactly what a player should be clearing out, and charging for it
---- would punish the only sensible response to the blind.
+--- The tax measures junk, and a real combination is not junk wherever it goes,
+--- so binning a flush costs nothing while binning five unrelated cards costs
+--- the same as playing them. One rule, one formula, whichever way the cards
+--- leave your hand.
+---
+--- The set is evaluated with the game's own hand detector rather than anything
+--- of ours, so "a real hand" means precisely what it means everywhere else --
+--- including whatever Four Fingers, Shortcut or a wild card make true.
 function Waste.count_discarded(cards)
-  if not cards then return 0 end
-  local wasted = 0
-  for _, card in ipairs(cards) do
-    if not (card and card.debuff) then wasted = wasted + 1 end
+  if not cards or #cards == 0 then return 0 end
+
+  local scoring
+  if G.FUNCS and G.FUNCS.get_poker_hand_info then
+    local ok, text, _, poker_hands = pcall(G.FUNCS.get_poker_hand_info, cards)
+    if ok and text and poker_hands and poker_hands[text] then
+      scoring = poker_hands[text][1]
+    end
   end
-  return wasted
+
+  return Waste.count_played(cards, scoring)
 end
 
 --- Charge for a played hand. Called from lovely/cm_waste_tax.toml, which has

@@ -313,9 +313,13 @@ refunding a discard at the moment the round ends and it can never be spent.
 
 > Every 2 cards wasted costs $1
 
-A wasted card is one that leaves your hand without contributing: played but
-outside the scoring hand, or discarded. Rounded **down**, so a single stray
-card is forgiven.
+A wasted card is one that leaves your hand without contributing. Rounded
+**down**, so a single stray card is forgiven.
+
+**A discard is judged exactly as a play is**, by the game's own hand detector.
+The tax measures junk, and a real combination is not junk wherever it goes --
+so binning a flush costs nothing, while binning five unrelated cards costs the
+same $2 as playing them. One formula, whichever way the cards leave your hand.
 
 | five-card play | scores | wasted | charge |
 |---|---|---|---|

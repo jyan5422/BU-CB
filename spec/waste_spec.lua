@@ -1,9 +1,19 @@
 -- cm_waste_tax. Every number here was agreed in the design conversation
 -- before it was built, so the table is the specification rather than a
 -- recording of whatever the code happened to do.
-local function load_module(cards_per_dollar)
+local function load_module(cards_per_dollar, scoring_for_discard)
   _G.ChallengeMod = {}
-  _G.G = { GAME = { modifiers = { cm_waste_tax = cards_per_dollar or 2 } } }
+  _G.G = {
+    GAME = { modifiers = { cm_waste_tax = cards_per_dollar or 2 } },
+    -- Discards are judged by the game's own hand detector, so the stub has to
+    -- answer like it does: text plus a poker_hands table keyed by that text.
+    FUNCS = {
+      get_poker_hand_info = function(cards)
+        local scoring = scoring_for_discard and scoring_for_discard(cards) or {}
+        return "Stub Hand", "Stub Hand", { ["Stub Hand"] = { scoring } }
+      end,
+    },
+  }
   assert(loadfile("smods/rules_waste.lua"))()
   return _G.ChallengeMod.Waste
 end
@@ -67,14 +77,32 @@ describe("the waste tax", function()
   end)
 
   it("never charges for discarding a debuffed card", function()
+    Waste = load_module(2, function() return {} end)
     assert.equal(0, Waste.count_discarded({ card(true), card(true) }))
   end)
 
-  -- Discards waste every card in them: none contributed.
-  it("charges discards at the same rate", function()
+  -- A discard is judged exactly as a play is: the tax measures junk, and a
+  -- real combination is not junk wherever it goes.
+  it("charges a junk discard like a junk play", function()
+    -- Nothing in the discarded set scores.
+    Waste = load_module(2, function() return {} end)
+    assert.equal(2, Waste.charge_for(Waste.count_discarded({ card(), card(), card(), card(), card() })))
     assert.equal(0, Waste.charge_for(Waste.count_discarded({ card() })))
-    assert.equal(1, Waste.charge_for(Waste.count_discarded({ card(), card() })))
-    assert.equal(2, Waste.charge_for(Waste.count_discarded({ card(), card(), card(), card() })))
+  end)
+
+  it("does not charge for discarding a real hand", function()
+    -- Every discarded card belongs to the combination.
+    Waste = load_module(2, function(cards) return cards end)
+    assert.equal(0, Waste.charge_for(Waste.count_discarded(
+      { card(), card(), card(), card(), card() })),
+      "binning a flush is a choice, not waste")
+  end)
+
+  it("charges a discard only for the cards outside the combination", function()
+    -- A pair plus three unrelated cards: two score, three do not.
+    Waste = load_module(2, function(cards) return { cards[1], cards[2] } end)
+    assert.equal(1, Waste.charge_for(Waste.count_discarded(
+      { card(), card(), card(), card(), card() })))
   end)
 
   it("charges nothing for a zero-card pass", function()
